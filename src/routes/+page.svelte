@@ -22,6 +22,7 @@
 	import FullscreenExitButton from '$lib/components/buttons/FullscreenExitButton.svelte';
 
 	const SEEK_AUTODROP_DELAY_MS = 600;
+	const CONTROLS_HIDE_TIMEOUT_MS = 1000;
 
 	let src: string = '';
 	let mediaElement: HTMLMediaElement;
@@ -43,6 +44,9 @@
 	let sliderDragging = false;
 	let sliderFreezingController: Nullable<AbortController> = null;
 	let sliderAutoDropTimeout: Nullable<number> = null;
+
+	let controlsHidden = true;
+	let controlsHideTimeout: Nullable<number> = null;
 
 	let volumeSliderValue = 100;
 
@@ -161,6 +165,7 @@
 		}
 	});
 
+	// TODO: impl hotkeys
 	onMount(async () => {
 		invoke('get_args').then(console.log);
 
@@ -210,6 +215,13 @@
 			seek();
 		});
 		window.addEventListener('mousemove', trySeek);
+		window.addEventListener('mousemove', async () => {
+			if (controlsHideTimeout) clearTimeout(controlsHideTimeout);
+			controlsHidden = false;
+			controlsHideTimeout = setTimeout(() => {
+				controlsHidden = true;
+			}, CONTROLS_HIDE_TIMEOUT_MS);
+		});
 		window.addEventListener('mouseup', () => {
 			sliderDragging = false;
 
@@ -242,11 +254,13 @@
 <video autoplay bind:this={mediaElement} {src} />
 <div
 	id="controls"
-	class="text-white absolute flex flex-col gap-2 items-stretch w-full bottom-0 px-6 py-4"
+	class="text-white absolute flex flex-col items-stretch w-full bottom-0 px-6 py-4 opacity-100 duration-150"
+	transition:fade
+	hidden={controlsHidden}
 >
 	<div id="slider">
 		<Slider
-			class="slider"
+			class="slider cursor-pointer"
 			min={0}
 			max={playbackDuration}
 			step={0.001}
@@ -296,7 +310,7 @@
 			<div id="volume-slider" class="w-32">
 				<!-- TODO: rip off the source, make custom slider -->
 				<Slider
-					class="slider"
+					class="slider cursor-pointer"
 					min={0}
 					max={100}
 					step={1}
@@ -390,6 +404,10 @@
 		width: 100vw;
 		bottom: 0; */
 		background-color: rgba(0, 0, 0, 0.8);
+
+		&[hidden] {
+			opacity: 0;
+		}
 	}
 
 	.tooltip {
