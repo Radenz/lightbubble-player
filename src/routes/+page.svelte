@@ -6,6 +6,8 @@
 	import { onMount, tick } from 'svelte';
 	import { createTooltip } from '@grail-ui/svelte';
 	import { Slider } from 'fluent-svelte';
+	import { fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
 	import { Player } from '$lib/player/player';
 	import { toDurationString, type Nullable } from '$lib/util';
@@ -94,6 +96,7 @@
 		}
 	}
 
+	// TODO: remove unnecessary wrapper
 	function play() {
 		if (player && player.isLoaded()) {
 			player.play();
@@ -135,6 +138,21 @@
 		triggerAttrs: volumeTooltipTriggerAttrs,
 		tooltipAttrs: volumeTooltipAttrs,
 		arrowAttrs: volumeTooltipArrowAttrs
+	} = createTooltip({
+		openDelay: 50,
+		closeDelay: 50,
+		positioning: {
+			fitViewport: true
+		}
+	});
+
+	const {
+		open: fullscreenTooltipOpen,
+		useTooltip: fullscreenTooltip,
+		useTooltipTrigger: fullscreenTooltipTrigger,
+		triggerAttrs: fullscreenTooltipTriggerAttrs,
+		tooltipAttrs: fullscreenTooltipAttrs,
+		arrowAttrs: fullscreenTooltipArrowAttrs
 	} = createTooltip({
 		openDelay: 50,
 		closeDelay: 50,
@@ -236,7 +254,7 @@
 			bind:thumbElement={sliderThumb}
 		>
 			<svelte:fragment slot="tooltip" let:value>
-				<span class="tooltip">
+				<span class="volume-slider-tooltip">
 					{toDurationString(Math.round(value))}
 				</span>
 			</svelte:fragment>
@@ -256,6 +274,7 @@
 				<!-- TODO: add reactivity to playlist -->
 				<SkipNextButton />
 			</div>
+			<!-- TODO: resize based on displayTime & displayDuration text length -->
 			<div id="time" class="w-20 flex justify-between items-center">
 				<span style="flex-basis: 45%;">{displayTime}</span>
 				<span class="text-center" style="flex-basis: 10%;">/</span>
@@ -285,7 +304,8 @@
 					</svelte:fragment>
 				</Slider>
 			</div>
-			<div id="fullscreen-button">
+			<!-- TODO: refactor tooltip wrappers -->
+			<div id="fullscreen-button" use:fullscreenTooltipTrigger {...$fullscreenTooltipTriggerAttrs}>
 				<!-- TODO: add tooltip -->
 				{#if !fullscreen}
 					<FullscreenButton on:click={setFullscreen} />
@@ -300,7 +320,11 @@
 <button on:click={openFile} class="text-white">OPEN FILE</button>
 
 {#if $volumeTooltipOpen}
-	<div use:volumeTooltip {...$volumeTooltipAttrs}>
+	<div
+		transition:fade={{ duration: 250, easing: cubicOut }}
+		use:volumeTooltip
+		{...$volumeTooltipAttrs}
+	>
 		<span class="text-sm text-white font-medium tooltip px-4 py-2 rounded">
 			{#if muted}
 				Unmute
@@ -309,6 +333,23 @@
 			{/if}
 		</span>
 		<div {...$volumeTooltipArrowAttrs} />
+	</div>
+{/if}
+
+{#if $fullscreenTooltipOpen}
+	<div
+		transition:fade={{ duration: 250, easing: cubicOut }}
+		use:fullscreenTooltip
+		{...$fullscreenTooltipAttrs}
+	>
+		<span class="text-sm text-white font-medium tooltip px-4 py-2 rounded">
+			{#if fullscreen}
+				Exit Fullscreen
+			{:else}
+				Fullscreen
+			{/if}
+		</span>
+		<div {...$fullscreenTooltipArrowAttrs} />
 	</div>
 {/if}
 

@@ -51,6 +51,8 @@ export class Player {
 	// * * * * * * * * * * * * * * * *
 	// Playback methods
 
+	// TODO: consider readyState: only play if loaded,
+	// otherwise add loaded event listener once
 	public play() {
 		this._paused.set(false);
 		this._ended.set(false);
