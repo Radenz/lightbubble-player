@@ -166,6 +166,8 @@
 
 		player = new Player(mediaElement);
 
+		// TODO: refactor by binding component-owned stores
+		// to player
 		player.durationString.subscribe((durationString) => {
 			displayDuration = durationString;
 		});
@@ -263,6 +265,7 @@
 	</div>
 	<div id="controls-bar" class="w-full flex justify-between">
 		<div id="controls-left" class="flex gap-4">
+			<!-- TODO: add tooltip -->
 			<div id="play-button">
 				<!-- <Icon name="play_arrow" /> -->
 				{#if paused || ended}
@@ -323,33 +326,31 @@
 {#if $volumeTooltipOpen}
 	<div
 		transition:fade={{ duration: 250, easing: cubicOut }}
+		class="tooltip px-4 py-2 rounded text-sm text-white font-medium"
 		use:volumeTooltip
 		{...$volumeTooltipAttrs}
 	>
-		<span class="text-sm text-white font-medium tooltip px-4 py-2 rounded">
-			{#if muted}
-				Unmute
-			{:else}
-				Mute
-			{/if}
-		</span>
+		{#if muted}
+			Unmute
+		{:else}
+			Mute
+		{/if}
 		<div {...$volumeTooltipArrowAttrs} />
 	</div>
 {/if}
 
 {#if $fullscreenTooltipOpen}
 	<div
+		class="tooltip px-4 py-2 rounded text-sm text-white font-medium"
 		transition:fade={{ duration: 250, easing: cubicOut }}
 		use:fullscreenTooltip
 		{...$fullscreenTooltipAttrs}
 	>
-		<span class="text-sm text-white font-medium tooltip px-4 py-2 rounded">
-			{#if fullscreen}
-				Exit Fullscreen
-			{:else}
-				Fullscreen
-			{/if}
-		</span>
+		{#if fullscreen}
+			Exit Fullscreen
+		{:else}
+			Fullscreen
+		{/if}
 		<div {...$fullscreenTooltipArrowAttrs} />
 	</div>
 {/if}
