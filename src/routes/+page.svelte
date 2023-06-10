@@ -118,7 +118,7 @@
 	}
 
 	function freezeSlider() {
-		if (!sliderAutoDropTimeout) clearTimeout(sliderAutoDropTimeout!);
+		if (sliderAutoDropTimeout) clearTimeout(sliderAutoDropTimeout!);
 		sliderFrozen = true;
 		sliderAutoDropTimeout = setTimeout(() => {
 			sliderAutoDropTimeout = null;
@@ -127,7 +127,7 @@
 	}
 
 	function unfreezeSlider() {
-		if (!sliderAutoDropTimeout) clearTimeout(sliderAutoDropTimeout!);
+		if (sliderAutoDropTimeout) clearTimeout(sliderAutoDropTimeout!);
 		sliderFrozen = false;
 	}
 
@@ -212,6 +212,7 @@
 			sliderDragging = false;
 
 			if (!sliderFrozen) return;
+			if (sliderAutoDropTimeout) return;
 
 			const seekTime = +sliderInput.value;
 			player.seek(seekTime);
