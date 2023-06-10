@@ -256,6 +256,7 @@
 	id="controls"
 	class="text-white absolute flex flex-col items-stretch w-full bottom-0 px-6 py-4 opacity-100 duration-150"
 	transition:fade
+	class:invisible={controlsHidden}
 	hidden={controlsHidden}
 >
 	<div id="slider">
