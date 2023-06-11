@@ -11,6 +11,7 @@
 
 	import { Player } from '$lib/player/player';
 	import { toDurationString, type Nullable } from '$lib/util';
+	import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 
 	import Icon from '$lib/components/Icon.svelte';
 	import PlayButton from '$lib/components/buttons/PlayButton.svelte';
@@ -194,6 +195,40 @@
 		});
 		player.muted.subscribe((_muted) => {
 			muted = _muted;
+		});
+
+		HotkeyRegistry.register('M', () => {
+			muted ? unmute() : mute();
+		});
+		HotkeyRegistry.register('F', () => {
+			fullscreen ? exitFullscreen() : setFullscreen();
+		});
+		HotkeyRegistry.register('Space', () => {
+			paused || ended ? play() : pause();
+		});
+		HotkeyRegistry.register('Up', () => {
+			volumeSliderValue = Math.min(100, volumeSliderValue + 5);
+		});
+		HotkeyRegistry.register('Down', () => {
+			volumeSliderValue = Math.max(0, volumeSliderValue - 5);
+		});
+		HotkeyRegistry.register('Right', () => {
+			if (!player.isLoaded()) return;
+			if (!mediaElement.seeking) {
+				freezeSlider();
+				playbackTime = Math.min(playbackDuration, playbackTime + 5);
+				player.seek(playbackTime);
+				unfreezeSlider();
+			}
+		});
+		HotkeyRegistry.register('Left', () => {
+			if (!player.isLoaded()) return;
+			if (!mediaElement.seeking) {
+				freezeSlider();
+				playbackTime = Math.max(0, playbackTime - 5);
+				player.seek(playbackTime);
+				unfreezeSlider();
+			}
 		});
 
 		window['player'] = player;
