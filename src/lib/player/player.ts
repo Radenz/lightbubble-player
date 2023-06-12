@@ -5,6 +5,8 @@ import { derived, readonly, writable } from 'svelte/store';
 type Time = number;
 
 export class Player {
+  private _element: Nullable<HTMLMediaElement> = null;
+
   private _duration = writable(-1);
   public duration = readonly(this._duration);
   public durationString = derived(this._duration, (duration) =>
@@ -32,7 +34,8 @@ export class Player {
 
   private source: Nullable<string> = null;
 
-  constructor(private element: HTMLMediaElement) {
+  public bind(element: HTMLMediaElement) {
+    this._element = element;
     element.addEventListener('loadedmetadata', () => {
       this._paused.set(false);
       this.refreshConfig();
@@ -49,8 +52,17 @@ export class Player {
   // * * * * * * * * * * * * * * * *
   // State methods
 
-  public isLoaded() {
+  get element(): HTMLMediaElement {
+    return this._element as HTMLMediaElement;
+  }
+
+  public isLoaded(): boolean {
+    if (!this.hasElementBound()) return false;
     return this.element.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA;
+  }
+
+  private hasElementBound() {
+    return this.element != null;
   }
 
   // * * * * * * * * * * * * * * * *
@@ -59,21 +71,29 @@ export class Player {
   // TODO: consider readyState: only play if loaded,
   // otherwise add loaded event listener once
   public play() {
+    if (!this.isLoaded()) return;
     this._paused.set(false);
     this._ended.set(false);
     this.element.play();
   }
 
   public pause() {
+    if (!this.isLoaded()) return;
     this._paused.set(true);
     this.element.pause();
   }
 
   public seek(time: Time) {
+    if (!this.isLoaded()) return;
     this.element.currentTime = time;
   }
 
+  public setVolume(volumePercentage: number) {
+    this.volume = volumePercentage;
+  }
+
   set volume(volumePercentage: number) {
+    if (!this.hasElementBound()) return;
     this.element.volume = volumePercentage / 100;
   }
 
@@ -82,11 +102,13 @@ export class Player {
   }
 
   public mute() {
+    if (!this.hasElementBound()) return;
     this._muted.set(true);
     this.element.muted = true;
   }
 
   public unmute() {
+    if (!this.hasElementBound()) return;
     this._muted.set(false);
     this.element.muted = false;
   }
@@ -115,7 +137,7 @@ export class Player {
   }
 
   private discoverExternalSubtitles() {
-    //
+    // TODO: impl
   }
 
   public useSource(path: string) {

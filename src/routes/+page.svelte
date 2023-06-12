@@ -28,7 +28,7 @@
 
   let src: string = '';
   let mediaElement: HTMLMediaElement;
-  let player: Player;
+  let player: Player = new Player();
 
   let displayTime = '0:00';
   let displayDuration = '0:00';
@@ -48,6 +48,7 @@
   let sliderAutoDropTimeout: Nullable<number> = null;
 
   let controlsHidden = true;
+  // TODO: unhide controls on paused and interactions
   let controlsHideTimeout: Nullable<number> = null;
 
   let volumeSliderValue = 100;
@@ -95,33 +96,6 @@
     }
   }
 
-  async function setVolume() {
-    if (player) {
-      player.volume = volumeSliderValue;
-    }
-  }
-
-  // TODO: remove unnecessary wrapper
-  function play() {
-    if (player && player.isLoaded()) {
-      player.play();
-    }
-  }
-
-  function pause() {
-    if (player?.isLoaded()) {
-      player.pause();
-    }
-  }
-
-  function mute() {
-    player?.mute();
-  }
-
-  function unmute() {
-    player?.unmute();
-  }
-
   function freezeSlider() {
     if (sliderAutoDropTimeout) clearTimeout(sliderAutoDropTimeout!);
     sliderFrozen = true;
@@ -139,7 +113,7 @@
   onMount(async () => {
     invoke('get_args').then(console.log);
 
-    player = new Player(mediaElement);
+    player.bind(mediaElement);
 
     // TODO: refactor by binding component-owned stores
     // to player
@@ -166,15 +140,16 @@
       muted = _muted;
     });
 
-    HotkeyRegistry.register('M', () => {
-      muted ? unmute() : mute();
-    });
+    // TODO: register hotkeys from player
+    // HotkeyRegistry.register('M', () => {
+    //   muted ? unmute() : mute();
+    // });
     HotkeyRegistry.register('F', () => {
       fullscreen ? exitFullscreen() : setFullscreen();
     });
-    HotkeyRegistry.register('Space', () => {
-      paused || ended ? play() : pause();
-    });
+    // HotkeyRegistry.register('Space', () => {
+    //   paused || ended ? play() : pause();
+    // });
     HotkeyRegistry.register('Up', () => {
       volumeSliderValue = Math.min(100, volumeSliderValue + 5);
     });
@@ -286,9 +261,9 @@
     <div id="controls-left" class="flex gap-4">
       <Tooltipped id="play-button">
         {#if paused || ended}
-          <PlayButton on:click={play} />
+          <PlayButton on:click={player.play.bind(player)} />
         {:else}
-          <PauseButton on:click={pause} />
+          <PauseButton on:click={player.pause.bind(player)} />
         {/if}
         <svelte:fragment slot="tooltip">
           {#if paused || ended}
@@ -312,9 +287,9 @@
     <div id="controls-right" class="flex items-center gap-4">
       <Tooltipped id="volume-button">
         {#if muted}
-          <VolumeOffButton on:click={unmute} />
+          <VolumeOffButton on:click={player.unmute.bind(player)} />
         {:else}
-          <VolumeOnButton on:click={mute} />
+          <VolumeOnButton on:click={player.mute.bind(player)} />
         {/if}
         <svelte:fragment slot="tooltip">
           {#if muted}
@@ -332,7 +307,7 @@
           max={100}
           step={1}
           bind:value={volumeSliderValue}
-          on:change={setVolume}
+          on:change={() => player.setVolume(volumeSliderValue)}
         >
           <svelte:fragment slot="tooltip" let:value>
             <span class="volume-slider-tooltip">{value}%</span>
