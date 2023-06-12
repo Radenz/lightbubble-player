@@ -72,8 +72,7 @@
     })) as string;
 
     if (!path) return;
-
-    src = convertFileSrc(path);
+    player.useSource(path);
   }
 
   function seek() {
@@ -136,36 +135,6 @@
     if (sliderAutoDropTimeout) clearTimeout(sliderAutoDropTimeout!);
     sliderFrozen = false;
   }
-
-  const {
-    open: volumeTooltipOpen,
-    useTooltip: volumeTooltip,
-    useTooltipTrigger: volumeTooltipTrigger,
-    triggerAttrs: volumeTooltipTriggerAttrs,
-    tooltipAttrs: volumeTooltipAttrs,
-    arrowAttrs: volumeTooltipArrowAttrs
-  } = createTooltip({
-    openDelay: 50,
-    closeDelay: 50,
-    positioning: {
-      fitViewport: true
-    }
-  });
-
-  const {
-    open: fullscreenTooltipOpen,
-    useTooltip: fullscreenTooltip,
-    useTooltipTrigger: fullscreenTooltipTrigger,
-    triggerAttrs: fullscreenTooltipTriggerAttrs,
-    tooltipAttrs: fullscreenTooltipAttrs,
-    arrowAttrs: fullscreenTooltipArrowAttrs
-  } = createTooltip({
-    openDelay: 50,
-    closeDelay: 50,
-    positioning: {
-      fitViewport: true
-    }
-  });
 
   onMount(async () => {
     invoke('get_args').then(console.log);

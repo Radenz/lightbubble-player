@@ -1,4 +1,5 @@
-import { toDurationString, type Listener, type ListenerMap } from '$lib/util';
+import { toDurationString, type Listener, type ListenerMap, type Nullable } from '$lib/util';
+import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { derived, readonly, writable } from 'svelte/store';
 
 type Time = number;
@@ -23,9 +24,13 @@ export class Player {
   private _muted = writable(false);
   public muted = readonly(this._muted);
 
-  private pausedListeners: ListenerMap<void> = {};
+  private _subtitles = writable({
+    external: [],
+    embedded: []
+  });
+  public subtitles = readonly(this._subtitles);
 
-  private pausedListenersIndex = -1;
+  private source: Nullable<string> = null;
 
   constructor(private element: HTMLMediaElement) {
     element.addEventListener('loadedmetadata', () => {
@@ -45,7 +50,7 @@ export class Player {
   // State methods
 
   public isLoaded() {
-    return this.el.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA;
+    return this.element.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA;
   }
 
   // * * * * * * * * * * * * * * * *
@@ -86,10 +91,6 @@ export class Player {
     this.element.muted = false;
   }
 
-  get el() {
-    return this.element;
-  }
-
   // * * * * * * * * * * * * * * * *
   // Event methods
 
@@ -97,27 +98,28 @@ export class Player {
     this._ended.set(true);
   }
 
-  // TODO: refactor using generic listener container
-
-  public onPaused(listener: Listener<void>): number {
-    this.pausedListenersIndex += 1;
-    this.pausedListeners[this.pausedListenersIndex] = listener;
-    return this.pausedListenersIndex;
+  private _onTimeUpdated() {
+    this._time.set(this.element.currentTime);
   }
 
-  public removePausedListener(listenerDescriptor: number) {
-    delete this.pausedListeners[listenerDescriptor];
-  }
-
-  public removeEndedListener(listenerDescriptor: number) {
-    delete this.removeEndedListener[listenerDescriptor];
-  }
+  // * * * * * * * * * * * * * * * *
+  // Metadata methods
 
   private refreshConfig() {
     this._duration.set(this.element.duration);
   }
 
-  private _onTimeUpdated() {
-    this._time.set(this.element.currentTime);
+  private loadSubtitles() {
+    this.discoverExternalSubtitles();
+    // TODO: dicover embedded subtitles
+  }
+
+  private discoverExternalSubtitles() {
+    //
+  }
+
+  public useSource(path: string) {
+    this.source = path;
+    this.element.src = convertFileSrc(path);
   }
 }
