@@ -21,6 +21,7 @@
 	import VolumeOnButton from '$lib/components/buttons/VolumeOnButton.svelte';
 	import FullscreenButton from '$lib/components/buttons/FullscreenButton.svelte';
 	import FullscreenExitButton from '$lib/components/buttons/FullscreenExitButton.svelte';
+	import Tooltipped from '$lib/components/Tooltipped.svelte';
 
 	const SEEK_AUTODROP_DELAY_MS = 600;
 	const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -166,7 +167,6 @@
 		}
 	});
 
-	// TODO: impl hotkeys
 	onMount(async () => {
 		invoke('get_args').then(console.log);
 
@@ -315,15 +315,20 @@
 	</div>
 	<div id="controls-bar" class="w-full flex justify-between">
 		<div id="controls-left" class="flex gap-4">
-			<!-- TODO: add tooltip -->
-			<div id="play-button">
-				<!-- <Icon name="play_arrow" /> -->
+			<Tooltipped id="play-button">
 				{#if paused || ended}
 					<PlayButton on:click={play} />
 				{:else}
 					<PauseButton on:click={pause} />
 				{/if}
-			</div>
+				<svelte:fragment slot="tooltip">
+					{#if paused || ended}
+						Play (Space)
+					{:else}
+						Pause (Space)
+					{/if}
+				</svelte:fragment>
+			</Tooltipped>
 			<div id="skip-button">
 				<!-- TODO: add reactivity to playlist -->
 				<SkipNextButton />
@@ -336,13 +341,20 @@
 			</div>
 		</div>
 		<div id="controls-right" class="flex items-center gap-4">
-			<div id="volume-button" use:volumeTooltipTrigger {...$volumeTooltipTriggerAttrs}>
+			<Tooltipped id="volume-button">
 				{#if muted}
 					<VolumeOffButton on:click={unmute} />
 				{:else}
 					<VolumeOnButton on:click={mute} />
 				{/if}
-			</div>
+				<svelte:fragment slot="tooltip">
+					{#if muted}
+						Unmute (M)
+					{:else}
+						Mute (M)
+					{/if}
+				</svelte:fragment>
+			</Tooltipped>
 			<div id="volume-slider" class="w-32">
 				<!-- TODO: rip off the source, make custom slider -->
 				<Slider
@@ -358,52 +370,25 @@
 					</svelte:fragment>
 				</Slider>
 			</div>
-			<!-- TODO: refactor tooltip wrappers -->
-			<div id="fullscreen-button" use:fullscreenTooltipTrigger {...$fullscreenTooltipTriggerAttrs}>
-				<!-- TODO: add tooltip -->
+			<Tooltipped id="fullscreen-button">
 				{#if !fullscreen}
 					<FullscreenButton on:click={setFullscreen} />
 				{:else}
 					<FullscreenExitButton on:click={exitFullscreen} />
 				{/if}
-			</div>
+				<svelte:fragment slot="tooltip">
+					{#if fullscreen}
+						Exit Fullscreen (F)
+					{:else}
+						Fullscreen (F)
+					{/if}
+				</svelte:fragment>
+			</Tooltipped>
 		</div>
 	</div>
 </div>
 
 <button on:click={openFile} class="text-white">OPEN FILE</button>
-
-{#if $volumeTooltipOpen}
-	<div
-		transition:fade={{ duration: 250, easing: cubicOut }}
-		class="tooltip px-4 py-2 rounded text-sm text-white font-medium"
-		use:volumeTooltip
-		{...$volumeTooltipAttrs}
-	>
-		{#if muted}
-			Unmute
-		{:else}
-			Mute
-		{/if}
-		<div {...$volumeTooltipArrowAttrs} />
-	</div>
-{/if}
-
-{#if $fullscreenTooltipOpen}
-	<div
-		class="tooltip px-4 py-2 rounded text-sm text-white font-medium"
-		transition:fade={{ duration: 250, easing: cubicOut }}
-		use:fullscreenTooltip
-		{...$fullscreenTooltipAttrs}
-	>
-		{#if fullscreen}
-			Exit Fullscreen
-		{:else}
-			Fullscreen
-		{/if}
-		<div {...$fullscreenTooltipArrowAttrs} />
-	</div>
-{/if}
 
 <style>
 	video {
@@ -444,12 +429,6 @@
 		&[hidden] {
 			opacity: 0;
 		}
-	}
-
-	.tooltip {
-		font-family: 'Inter';
-		/* background-color: rgba(0, 0, 0, 0.8); */
-		background-color: #474747;
 	}
 
 	#slider {
