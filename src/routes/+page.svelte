@@ -22,6 +22,7 @@
   import FullscreenButton from '$lib/components/buttons/FullscreenButton.svelte';
   import FullscreenExitButton from '$lib/components/buttons/FullscreenExitButton.svelte';
   import Tooltipped from '$lib/components/Tooltipped.svelte';
+  import { writable } from 'svelte/store';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -30,14 +31,13 @@
   let mediaElement: HTMLMediaElement;
   let player: Player = new Player();
 
-  let displayTime = '0:00';
-  let displayDuration = '0:00';
-  let playbackTime = 0;
-  let playbackDuration = -1;
-
-  let paused = false;
-  let ended = false;
-  let muted = false;
+  let playbackDuration = writable(-1);
+  let displayDuration = writable('0:00');
+  let playbackTime = writable(0);
+  let displayTime = writable('0:00');
+  let paused = writable(false);
+  let ended = writable(false);
+  let muted = writable(false);
 
   let slider: HTMLDivElement;
   let sliderThumb: HTMLDivElement;
@@ -82,7 +82,7 @@
     freezeSlider();
 
     const seekTime = +sliderInput.value;
-    displayTime = toDurationString(Math.round(seekTime));
+    $displayTime = toDurationString(Math.round(seekTime));
 
     if (!mediaElement.seeking) {
       player.seek(seekTime);
@@ -114,31 +114,13 @@
     invoke('get_args').then(console.log);
 
     player.bind(mediaElement);
-
-    // TODO: refactor by binding component-owned stores
-    // to player
-    player.durationString.subscribe((durationString) => {
-      displayDuration = durationString;
-    });
-    player.duration.subscribe((duration) => {
-      playbackDuration = duration;
-    });
-    player.time.subscribe((time) => {
-      if (!sliderFrozen) playbackTime = time;
-    });
-    player.timeString.subscribe((timeString) => {
-      if (!sliderFrozen) displayTime = timeString;
-    });
-    player.paused.subscribe((_paused) => {
-      paused = _paused;
-    });
-    player.ended.subscribe((_ended) => {
-      ended = _ended;
-      if (ended) playbackTime = playbackDuration;
-    });
-    player.muted.subscribe((_muted) => {
-      muted = _muted;
-    });
+    player.bindDuration(playbackDuration);
+    player.bindDurationString(displayDuration);
+    player.bindTime(playbackTime);
+    player.bindTimeString(displayTime);
+    player.bindPaused(paused);
+    player.bindEnded(ended);
+    player.bindMuted(muted);
 
     // TODO: register hotkeys from player
     // HotkeyRegistry.register('M', () => {
@@ -160,8 +142,8 @@
       if (!player.isLoaded()) return;
       if (!mediaElement.seeking) {
         freezeSlider();
-        playbackTime = Math.min(playbackDuration, playbackTime + 5);
-        player.seek(playbackTime);
+        $playbackTime = Math.min($playbackDuration, $playbackTime + 5);
+        player.seek($playbackTime);
         unfreezeSlider();
       }
     });
@@ -169,8 +151,8 @@
       if (!player.isLoaded()) return;
       if (!mediaElement.seeking) {
         freezeSlider();
-        playbackTime = Math.max(0, playbackTime - 5);
-        player.seek(playbackTime);
+        $playbackTime = Math.max(0, $playbackTime - 5);
+        player.seek($playbackTime);
         unfreezeSlider();
       }
     });
@@ -222,6 +204,14 @@
       );
     });
   });
+
+  $: if (sliderFrozen) {
+    player?.freezeTimeUpdate();
+  } else {
+    player?.unfreezeTimeUpdate();
+  }
+  $: console.log($playbackDuration);
+  $: console.log($playbackTime);
 </script>
 
 <svelte:head>
@@ -242,9 +232,9 @@
     <Slider
       class="slider cursor-pointer"
       min={0}
-      max={playbackDuration}
+      max={$playbackDuration}
       step={0.001}
-      value={playbackTime}
+      value={$playbackTime}
       on:change={sliderFrozen ? seek : null}
       bind:containerElement={slider}
       bind:inputElement={sliderInput}
@@ -260,13 +250,13 @@
   <div id="controls-bar" class="w-full flex justify-between">
     <div id="controls-left" class="flex gap-4">
       <Tooltipped id="play-button">
-        {#if paused || ended}
+        {#if $paused || $ended}
           <PlayButton on:click={player.play.bind(player)} />
         {:else}
           <PauseButton on:click={player.pause.bind(player)} />
         {/if}
         <svelte:fragment slot="tooltip">
-          {#if paused || ended}
+          {#if $paused || $ended}
             Play (Space)
           {:else}
             Pause (Space)
@@ -279,20 +269,20 @@
       </div>
       <!-- TODO: resize based on displayTime & displayDuration text length -->
       <div id="time" class="w-20 flex justify-between items-center">
-        <span style="flex-basis: 45%;">{displayTime}</span>
+        <span style="flex-basis: 45%;">{$displayTime}</span>
         <span class="text-center" style="flex-basis: 10%;">/</span>
-        <span class="text-right" style="flex-basis: 45%;">{displayDuration}</span>
+        <span class="text-right" style="flex-basis: 45%;">{$displayDuration}</span>
       </div>
     </div>
     <div id="controls-right" class="flex items-center gap-4">
       <Tooltipped id="volume-button">
-        {#if muted}
+        {#if $muted}
           <VolumeOffButton on:click={player.unmute.bind(player)} />
         {:else}
           <VolumeOnButton on:click={player.mute.bind(player)} />
         {/if}
         <svelte:fragment slot="tooltip">
-          {#if muted}
+          {#if $muted}
             Unmute (M)
           {:else}
             Mute (M)

@@ -2,55 +2,108 @@ import { toDurationString, type Nullable } from '$lib/util';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { readDir } from '@tauri-apps/api/fs';
 import { dirname, extname, basename } from '@tauri-apps/api/path';
-import { derived, readonly, writable } from 'svelte/store';
+import { derived, writable, type Unsubscriber, type Writable, get } from 'svelte/store';
 import { SUPPORTED_SUBTITLE_FORMATS, type SubtitleMeta } from './subtitle';
 
 type Time = number;
 
 export class Player {
   private _element: Nullable<HTMLMediaElement> = null;
+  private timeUpdateFrozen = false;
 
-  private _duration = writable(-1);
-  public duration = readonly(this._duration);
-  public durationString = derived(this._duration, (duration) =>
+  private duration = writable(-1);
+  private unsubscribeDuration: Nullable<Unsubscriber> = null;
+
+  private durationString = derived(this.duration, (duration) =>
     toDurationString(Math.max(Math.round(duration), 0))
   );
+  private unsubscribeDurationString: Nullable<Unsubscriber> = null;
 
-  private _time = writable(0);
-  public time = readonly(this._time);
-  public timeString = derived(this._time, (time) => toDurationString(Math.round(time)));
+  private time = writable(0);
+  private unsubscribeTime: Nullable<Unsubscriber> = null;
 
-  private _paused = writable(true);
-  public paused = readonly(this._paused);
+  public timeString = derived(this.time, (time) => toDurationString(Math.round(time)));
+  private unsubscribeTimeString: Nullable<Unsubscriber> = null;
 
-  private _ended = writable(false);
-  public ended = readonly(this._ended);
+  private paused = writable(true);
+  private unsubscribePaused: Nullable<Unsubscriber> = null;
 
-  private _muted = writable(false);
-  public muted = readonly(this._muted);
+  private ended = writable(false);
+  private unsubscribeEnded: Nullable<Unsubscriber> = null;
 
-  private _subtitles = writable({
+  private muted = writable(false);
+  private unsubscribeMuted: Nullable<Unsubscriber> = null;
+
+  private subtitles = writable({
     external: [],
     embedded: []
   });
-  public subtitles = readonly(this._subtitles);
+  private unsubscribeSubtitles: Nullable<Unsubscriber> = null;
 
   private source: Nullable<string> = null;
+
+  // * * * * * * * * * * * * * * * *
+  // Bindings
 
   public bind(element: HTMLMediaElement) {
     this._element = element;
     element.addEventListener('loadedmetadata', () => {
-      this._paused.set(false);
+      this.paused.set(false);
       this.refreshConfig();
       this.discoverSubtitles();
     });
     element.addEventListener('timeupdate', async () => {
-      this._onTimeUpdated();
+      this.onTimeUpdated();
     });
 
     element.addEventListener('ended', () => {
       this.onEnded();
     });
+  }
+
+  public bindDuration(duration: Writable<number>) {
+    this.unsubscribeDuration?.call(this);
+    this.unsubscribeDuration = this.duration.subscribe((value) => {
+      duration.set(value);
+    });
+  }
+
+  public bindDurationString(durationString: Writable<string>) {
+    this.unsubscribeDurationString?.call(this);
+    this.unsubscribeDurationString = this.durationString.subscribe((value) => {
+      durationString.set(value);
+    });
+  }
+
+  public bindTime(time: Writable<number>) {
+    this.unsubscribeTime?.call(this);
+    this.unsubscribeTime = this.time.subscribe((value) => {
+      if (!this.timeUpdateFrozen) time.set(value);
+    });
+  }
+
+  public bindTimeString(timeString: Writable<string>) {
+    this.unsubscribeTimeString?.call(this);
+    this.unsubscribeTime = this.timeString.subscribe((value) => {
+      timeString.set(value);
+    });
+  }
+
+  public bindPaused(paused: Writable<boolean>) {
+    this.unsubscribePaused?.call(this);
+    this.unsubscribePaused = this.paused.subscribe((value) => {
+      paused.set(value);
+    });
+  }
+
+  public bindEnded(ended: Writable<boolean>) {
+    this.unsubscribeEnded?.call(this);
+    this.unsubscribeEnded = this.ended.subscribe((value) => ended.set(value));
+  }
+
+  public bindMuted(muted: Writable<boolean>) {
+    this.unsubscribeMuted?.call(this);
+    this.unsubscribeMuted = this.muted.subscribe((value) => muted.set(value));
   }
 
   // * * * * * * * * * * * * * * * *
@@ -76,14 +129,14 @@ export class Player {
   // otherwise add loaded event listener once
   public play() {
     if (!this.isLoaded()) return;
-    this._paused.set(false);
-    this._ended.set(false);
+    this.paused.set(false);
+    this.ended.set(false);
     this.element.play();
   }
 
   public pause() {
     if (!this.isLoaded()) return;
-    this._paused.set(true);
+    this.paused.set(true);
     this.element.pause();
   }
 
@@ -107,32 +160,41 @@ export class Player {
 
   public mute() {
     if (!this.hasElementBound()) return;
-    this._muted.set(true);
+    this.muted.set(true);
     this.element.muted = true;
   }
 
   public unmute() {
     if (!this.hasElementBound()) return;
-    this._muted.set(false);
+    this.muted.set(false);
     this.element.muted = false;
+  }
+
+  public freezeTimeUpdate() {
+    this.timeUpdateFrozen = true;
+  }
+
+  public unfreezeTimeUpdate() {
+    this.timeUpdateFrozen = false;
   }
 
   // * * * * * * * * * * * * * * * *
   // Event methods
 
   private onEnded() {
-    this._ended.set(true);
+    this.ended.set(true);
+    this.time.set(get(this.duration));
   }
 
-  private _onTimeUpdated() {
-    this._time.set(this.element.currentTime);
+  private onTimeUpdated() {
+    this.time.set(this.element.currentTime);
   }
 
   // * * * * * * * * * * * * * * * *
   // Metadata methods
 
   private refreshConfig() {
-    this._duration.set(this.element.duration);
+    this.duration.set(this.element.duration);
   }
 
   private discoverSubtitles() {
