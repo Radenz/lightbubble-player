@@ -1,6 +1,9 @@
-import { toDurationString, type Listener, type ListenerMap, type Nullable } from '$lib/util';
+import { toDurationString, type Nullable } from '$lib/util';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { readDir } from '@tauri-apps/api/fs';
+import { dirname, extname, basename } from '@tauri-apps/api/path';
 import { derived, readonly, writable } from 'svelte/store';
+import { SUPPORTED_SUBTITLE_FORMATS, type SubtitleMeta } from './subtitle';
 
 type Time = number;
 
@@ -39,6 +42,7 @@ export class Player {
     element.addEventListener('loadedmetadata', () => {
       this._paused.set(false);
       this.refreshConfig();
+      this.discoverSubtitles();
     });
     element.addEventListener('timeupdate', async () => {
       this._onTimeUpdated();
@@ -131,13 +135,29 @@ export class Player {
     this._duration.set(this.element.duration);
   }
 
-  private loadSubtitles() {
+  private discoverSubtitles() {
     this.discoverExternalSubtitles();
     // TODO: dicover embedded subtitles
   }
 
-  private discoverExternalSubtitles() {
-    // TODO: impl
+  private async discoverExternalSubtitles() {
+    if (this.source) {
+      const dir = await dirname(this.source);
+      const files = await readDir(dir);
+      const subtitles: SubtitleMeta[] = [];
+
+      for (const filePath of files) {
+        const ext = await extname(filePath.path);
+        const base = await basename(filePath.name ?? 'Unknown');
+        if (SUPPORTED_SUBTITLE_FORMATS.includes(ext)) {
+          subtitles.push({
+            basename: base,
+            ext,
+            path: filePath.path
+          });
+        }
+      }
+    }
   }
 
   public useSource(path: string) {
