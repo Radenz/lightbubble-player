@@ -11,7 +11,6 @@
 
   import { Player } from '$lib/player/player';
   import { toDurationString, type Nullable } from '$lib/util';
-  import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 
   import Icon from '$lib/components/Icon.svelte';
   import PlayButton from '$lib/components/buttons/PlayButton.svelte';
@@ -38,6 +37,7 @@
   let paused = writable(false);
   let ended = writable(false);
   let muted = writable(false);
+  let volume = writable(100);
 
   let slider: HTMLDivElement;
   let sliderThumb: HTMLDivElement;
@@ -51,7 +51,7 @@
   // TODO: unhide controls on paused and interactions
   let controlsHideTimeout: Nullable<number> = null;
 
-  let volumeSliderValue = 100;
+  $: volumeSliderValue = $volume;
 
   let fullscreen = false;
 
@@ -120,42 +120,8 @@
     player.bindTimeString(displayTime);
     player.bindPaused(paused);
     player.bindEnded(ended);
+    player.bindVolume(volume);
     player.bindMuted(muted);
-
-    // TODO: register hotkeys from player
-    // HotkeyRegistry.register('M', () => {
-    //   muted ? unmute() : mute();
-    // });
-    HotkeyRegistry.register('F', () => {
-      fullscreen ? exitFullscreen() : setFullscreen();
-    });
-    // HotkeyRegistry.register('Space', () => {
-    //   paused || ended ? play() : pause();
-    // });
-    HotkeyRegistry.register('Up', () => {
-      volumeSliderValue = Math.min(100, volumeSliderValue + 5);
-    });
-    HotkeyRegistry.register('Down', () => {
-      volumeSliderValue = Math.max(0, volumeSliderValue - 5);
-    });
-    HotkeyRegistry.register('Right', () => {
-      if (!player.isLoaded()) return;
-      if (!mediaElement.seeking) {
-        freezeSlider();
-        $playbackTime = Math.min($playbackDuration, $playbackTime + 5);
-        player.seek($playbackTime);
-        unfreezeSlider();
-      }
-    });
-    HotkeyRegistry.register('Left', () => {
-      if (!player.isLoaded()) return;
-      if (!mediaElement.seeking) {
-        freezeSlider();
-        $playbackTime = Math.max(0, $playbackTime - 5);
-        player.seek($playbackTime);
-        unfreezeSlider();
-      }
-    });
 
     window['player'] = player;
     window['setFullscreen'] = setFullscreen;
@@ -204,14 +170,6 @@
       );
     });
   });
-
-  $: if (sliderFrozen) {
-    player?.freezeTimeUpdate();
-  } else {
-    player?.unfreezeTimeUpdate();
-  }
-  $: console.log($playbackDuration);
-  $: console.log($playbackTime);
 </script>
 
 <svelte:head>

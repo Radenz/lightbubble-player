@@ -4,6 +4,8 @@ import { readDir } from '@tauri-apps/api/fs';
 import { dirname, extname, basename } from '@tauri-apps/api/path';
 import { derived, writable, type Unsubscriber, type Writable, get } from 'svelte/store';
 import { SUPPORTED_SUBTITLE_FORMATS, type SubtitleMeta } from './subtitle';
+import * as HotkeyRegistry from '$lib/keyboard/hotkey';
+import { appWindow } from '@tauri-apps/api/window';
 
 type Time = number;
 
@@ -34,6 +36,12 @@ export class Player {
   private muted = writable(false);
   private unsubscribeMuted: Nullable<Unsubscriber> = null;
 
+  private volume = writable(100);
+  private unsubscribeVolume: Nullable<Unsubscriber> = null;
+
+  private fullscreen = writable(false);
+  private unsubscribeFullscreen: Nullable<Unsubscriber> = null;
+
   private subtitles = writable({
     external: [],
     embedded: []
@@ -41,6 +49,64 @@ export class Player {
   private unsubscribeSubtitles: Nullable<Unsubscriber> = null;
 
   private source: Nullable<string> = null;
+
+  // * * * * * * * * * * * * * * * *
+  // Construction
+
+  constructor() {
+    this.registerHotkeys();
+  }
+
+  private registerHotkeys() {
+    HotkeyRegistry.register('M', () => {
+      get(this.muted) ? this.unmute() : this.mute();
+    });
+    HotkeyRegistry.register('F', () => {
+      get(this.fullscreen) ? this.exitFullscreen() : this.setFullscreen();
+    });
+    HotkeyRegistry.register('Space', () => {
+      get(this.paused) || get(this.ended) ? this.play() : this.pause();
+    });
+    HotkeyRegistry.register('Up', () => {
+      this.setVolume(Math.min(100, this.$volume + 5));
+    });
+    HotkeyRegistry.register('Down', () => {
+      this.setVolume(Math.max(0, this.$volume - 5));
+    });
+    HotkeyRegistry.register('Right', () => {
+      if (!this.isLoaded()) return;
+      if (!this.element.seeking) {
+        // freezeSlider();
+        this.time.update((time) => Math.min(this.$duration, time + 5));
+        this.seek(this.$time);
+        // unfreezeSlider();
+      }
+    });
+    HotkeyRegistry.register('Left', () => {
+      if (!this.isLoaded()) return;
+      if (!this.element.seeking) {
+        // freezeSlider();
+        this.time.update((time) => Math.max(0, time - 5));
+        this.seek(this.$time);
+        // unfreezeSlider();
+      }
+    });
+  }
+
+  // * * * * * * * * * * * * * * * *
+  // Effects
+
+  private setFullscreen() {
+    appWindow.setFullscreen(true).then(() => {
+      this.fullscreen.set(true);
+    });
+  }
+
+  private exitFullscreen() {
+    appWindow.setFullscreen(false).then(() => {
+      this.fullscreen.set(false);
+    });
+  }
 
   // * * * * * * * * * * * * * * * *
   // Bindings
@@ -101,9 +167,19 @@ export class Player {
     this.unsubscribeEnded = this.ended.subscribe((value) => ended.set(value));
   }
 
+  public bindVolume(volume: Writable<number>) {
+    this.unsubscribeVolume?.call(this);
+    this.unsubscribeVolume = this.volume.subscribe((value) => volume.set(value));
+  }
+
   public bindMuted(muted: Writable<boolean>) {
     this.unsubscribeMuted?.call(this);
     this.unsubscribeMuted = this.muted.subscribe((value) => muted.set(value));
+  }
+
+  public bindFullscreen(fullscreen: Writable<boolean>) {
+    this.unsubscribeFullscreen?.call(this);
+    this.unsubscribeFullscreen = this.fullscreen.subscribe((value) => fullscreen.set(value));
   }
 
   // * * * * * * * * * * * * * * * *
@@ -120,6 +196,42 @@ export class Player {
 
   private hasElementBound() {
     return this.element != null;
+  }
+
+  get $duration() {
+    return get(this.duration);
+  }
+
+  get $durationString() {
+    return get(this.durationString);
+  }
+
+  get $time() {
+    return get(this.time);
+  }
+
+  get $timeString() {
+    return get(this.timeString);
+  }
+
+  get $paused() {
+    return get(this.paused);
+  }
+
+  get $ended() {
+    return get(this.ended);
+  }
+
+  get $volume() {
+    return get(this.volume);
+  }
+
+  get $muted() {
+    return get(this.muted);
+  }
+
+  get $fullscreen() {
+    return get(this.fullscreen);
   }
 
   // * * * * * * * * * * * * * * * *
@@ -146,17 +258,19 @@ export class Player {
   }
 
   public setVolume(volumePercentage: number) {
-    this.volume = volumePercentage;
-  }
-
-  set volume(volumePercentage: number) {
     if (!this.hasElementBound()) return;
+    this.volume.set(volumePercentage);
     this.element.volume = volumePercentage / 100;
   }
 
-  get volume(): number {
-    return Math.round(this.element.volume);
-  }
+  // set volume(volumePercentage: number) {
+  //   if (!this.hasElementBound()) return;
+  //   this.element.volume = volumePercentage / 100;
+  // }
+
+  // get volume(): number {
+  //   return Math.round(this.element.volume * 100);
+  // }
 
   public mute() {
     if (!this.hasElementBound()) return;
@@ -183,7 +297,7 @@ export class Player {
 
   private onEnded() {
     this.ended.set(true);
-    this.time.set(get(this.duration));
+    this.time.set(this.$duration);
   }
 
   private onTimeUpdated() {
