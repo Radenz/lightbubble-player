@@ -3,9 +3,14 @@ import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { readDir } from '@tauri-apps/api/fs';
 import { dirname, extname, basename } from '@tauri-apps/api/path';
 import { derived, writable, type Unsubscriber, type Writable, get } from 'svelte/store';
-import { SUPPORTED_SUBTITLE_FORMATS, type SubtitleMeta } from './subtitle';
+import {
+  SUPPORTED_SUBTITLE_FORMATS,
+  type ExternalSubtitleMeta,
+  type EmbeddedSubtitleMeta
+} from './subtitle';
 import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
+import { invoke } from '@tauri-apps/api';
 
 type Time = number;
 
@@ -43,8 +48,8 @@ export class Player {
   private unsubscribeFullscreen: Nullable<Unsubscriber> = null;
 
   private subtitles = writable({
-    external: [],
-    embedded: []
+    external: [] as ExternalSubtitleMeta[],
+    embedded: [] as EmbeddedSubtitleMeta[]
   });
   private unsubscribeSubtitles: Nullable<Unsubscriber> = null;
 
@@ -55,6 +60,8 @@ export class Player {
 
   constructor() {
     this.registerHotkeys();
+
+    this.subtitles.subscribe(console.log);
   }
 
   private registerHotkeys() {
@@ -312,27 +319,52 @@ export class Player {
   }
 
   private discoverSubtitles() {
+    this.discoverEmbeddedSubtitles();
     this.discoverExternalSubtitles();
-    // TODO: dicover embedded subtitles
+  }
+
+  private async discoverEmbeddedSubtitles() {
+    if (this.source) {
+      const streams = await invoke<Streams>('discover_streams', {
+        path: this.source
+      });
+
+      console.log(`found streams`, streams);
+
+      // TODO: store other stream metadata
+      this.subtitles.update((subtitles) => {
+        subtitles.embedded = streams.subtitle;
+        return subtitles;
+      });
+    }
   }
 
   private async discoverExternalSubtitles() {
     if (this.source) {
       const dir = await dirname(this.source);
       const files = await readDir(dir);
-      const subtitles: SubtitleMeta[] = [];
+      const externalSubtitles: ExternalSubtitleMeta[] = [];
 
       for (const filePath of files) {
+        if (filePath.children) continue;
         const ext = await extname(filePath.path);
-        const base = await basename(filePath.name ?? 'Unknown');
+        const base = await basename(
+          filePath.name ?? 'Unknown',
+          filePath.name ? `.${ext}` : undefined
+        );
         if (SUPPORTED_SUBTITLE_FORMATS.includes(ext)) {
-          subtitles.push({
+          externalSubtitles.push({
             basename: base,
             ext,
             path: filePath.path
           });
         }
       }
+
+      this.subtitles.update((subtitles) => {
+        subtitles.external = externalSubtitles;
+        return subtitles;
+      });
     }
   }
 
