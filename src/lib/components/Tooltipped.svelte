@@ -4,6 +4,7 @@
   import { fade } from 'svelte/transition';
 
   export let id: string | undefined = undefined;
+  export let disabled = false;
 
   const config: TooltipConfig = {
     openDelay: 50,
@@ -22,7 +23,7 @@
   <slot />
 </div>
 
-{#if $open}
+{#if $open && !disabled}
   <div
     class="tooltip px-4 py-2 rounded text-sm text-white font-medium"
     transition:fade={{ duration: 250, easing: cubicOut }}

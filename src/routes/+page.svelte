@@ -22,6 +22,9 @@
   import FullscreenExitButton from '$lib/components/buttons/FullscreenExitButton.svelte';
   import Tooltipped from '$lib/components/Tooltipped.svelte';
   import { writable } from 'svelte/store';
+  import SubtitleOffButton from '$lib/components/buttons/SubtitleOffButton.svelte';
+  import SubtitleOnButton from '$lib/components/buttons/SubtitleOnButton.svelte';
+  import ContextMenu from '$lib/components/ContextMenu.svelte';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -38,6 +41,7 @@
   let ended = writable(false);
   let muted = writable(false);
   let volume = writable(100);
+  let subtitleId = writable(-1);
 
   let slider: HTMLDivElement;
   let sliderThumb: HTMLDivElement;
@@ -52,6 +56,7 @@
   let controlsHideTimeout: Nullable<number> = null;
 
   $: volumeSliderValue = $volume;
+  $: subtitleOn = $subtitleId >= 0;
 
   let fullscreen = false;
 
@@ -178,6 +183,8 @@
   }
 </script>
 
+<!-- TODO: consider radix-svelte & shadcn-svelte for more robust components (possible BREAKING CHANGES) -->
+
 <svelte:head>
   <title>Home</title>
   <meta name="description" content="Svelte demo app" />
@@ -239,6 +246,28 @@
       </div>
     </div>
     <div id="controls-right" class="flex items-center gap-4">
+      <!-- TODO: don't hide controls if menu is opened -->
+      <!-- TODO: add conditional rendering if no media is loaded, possibly need refactoring -->
+      <ContextMenu id="subtitle-button" let:isOpen>
+        <!-- TODO: turn off subtitles on click -->
+        <Tooltipped id="subtitle-button" disabled={isOpen}>
+          {#if subtitleOn}
+            <SubtitleOffButton on:click={null} />
+          {:else}
+            <SubtitleOnButton on:click={player.mute.bind(player)} />
+          {/if}
+          <svelte:fragment slot="tooltip">
+            {#if $muted}
+              Subtitle (C)
+            {:else}
+              Turn Off Subtitle (C)
+            {/if}
+          </svelte:fragment>
+        </Tooltipped>
+        <svelte:fragment slot="menu">
+          <!-- TODO: show discovered subtitles -->
+        </svelte:fragment>
+      </ContextMenu>
       <Tooltipped id="volume-button">
         {#if $muted}
           <VolumeOffButton on:click={player.unmute.bind(player)} />
