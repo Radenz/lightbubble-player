@@ -170,6 +170,12 @@
       );
     });
   });
+
+  $: if (sliderFrozen) {
+    player.freezeTimeUpdate();
+  } else {
+    player.unfreezeTimeUpdate();
+  }
 </script>
 
 <svelte:head>
