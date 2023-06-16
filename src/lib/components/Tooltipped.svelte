@@ -24,6 +24,7 @@
 </div>
 
 {#if $open && !disabled}
+  <!-- TODO: opt-out padding -->
   <div
     class="tooltip px-4 py-2 rounded text-sm text-white font-medium"
     transition:fade={{ duration: 250, easing: cubicOut }}

@@ -1,5 +1,6 @@
 // TODO: add more format supported by libavcodec
 export const SUPPORTED_SUBTITLE_FORMATS = ['ass', 'srt', 'vtt'];
+export type SubtitleFormat = 'ass' | 'srt' | 'vtt';
 
 export interface ExternalSubtitleMeta {
   path: string;
