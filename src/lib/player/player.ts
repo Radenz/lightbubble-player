@@ -6,7 +6,9 @@ import { derived, writable, type Unsubscriber, type Writable, get } from 'svelte
 import {
   SUPPORTED_SUBTITLE_FORMATS,
   type ExternalSubtitleMeta,
-  type EmbeddedSubtitleMeta
+  type EmbeddedSubtitleMeta,
+  type SubtitlesMeta,
+  isSubtitleSupported
 } from './subtitle';
 import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
@@ -184,6 +186,11 @@ export class Player {
     this.unsubscribeMuted = this.muted.subscribe((value) => muted.set(value));
   }
 
+  public bindSubtitles(subtitles: Writable<SubtitlesMeta>) {
+    this.unsubscribeSubtitles?.call(this);
+    this.unsubscribeSubtitles = this.subtitles.subscribe((value) => subtitles.set(value));
+  }
+
   public bindFullscreen(fullscreen: Writable<boolean>) {
     this.unsubscribeFullscreen?.call(this);
     this.unsubscribeFullscreen = this.fullscreen.subscribe((value) => fullscreen.set(value));
@@ -352,7 +359,7 @@ export class Player {
           filePath.name ?? 'Unknown',
           filePath.name ? `.${ext}` : undefined
         );
-        if (SUPPORTED_SUBTITLE_FORMATS.includes(ext)) {
+        if (isSubtitleSupported(ext)) {
           externalSubtitles.push({
             basename: base,
             ext,

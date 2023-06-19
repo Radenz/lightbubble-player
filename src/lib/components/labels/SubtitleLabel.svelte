@@ -1,18 +1,20 @@
 <script lang="ts">
   import type { SubtitleFormat } from '$lib/player/subtitle';
 
-  export let format: SubtitleFormat;
+  export let format: SubtitleFormat | undefined = undefined;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <span
   on:click
-  class="subtitle-label ml-4 mr-6 relative cursor-pointer opacity-75 hover:opacity-100"
+  class="subtitle-label ml-4 mr-6 relative cursor-pointer opacity-75 hover:opacity-100 w-auto font-normal"
 >
   <slot />
-  <span class="subtitle-format-badge absolute -top-1/2 font-normal">
-    {format.toUpperCase()}
-  </span>
+  {#if format}
+    <span class="subtitle-format-badge absolute -top-1/2 font-normal">
+      {format.toUpperCase()}
+    </span>
+  {/if}
 </span>
 
 <style>

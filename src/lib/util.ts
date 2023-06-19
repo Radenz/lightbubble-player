@@ -29,3 +29,11 @@ export function toDurationString(duration: number): string {
 
   return durationString;
 }
+
+/**
+ * Alias for built-in template literal. Used to scope
+ * tailwind intellisense in ts strings.
+ */
+export function tw(strings: TemplateStringsArray, ...values: unknown[]): string {
+  return String.raw({ raw: strings }, ...values);
+}

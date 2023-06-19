@@ -25,6 +25,8 @@
   import SubtitleOffButton from '$lib/components/buttons/SubtitleOffButton.svelte';
   import SubtitleOnButton from '$lib/components/buttons/SubtitleOnButton.svelte';
   import ContextMenu from '$lib/components/ContextMenu.svelte';
+  import SubtitleLabel from '$lib/components/labels/SubtitleLabel.svelte';
+  import type { EmbeddedSubtitleMeta, ExternalSubtitleMeta } from '$lib/player/subtitle';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -41,6 +43,10 @@
   let ended = writable(false);
   let muted = writable(false);
   let volume = writable(100);
+  let subtitles = writable({
+    external: [] as ExternalSubtitleMeta[],
+    embedded: [] as EmbeddedSubtitleMeta[]
+  });
   let subtitleId = writable(-1);
 
   let slider: HTMLDivElement;
@@ -127,6 +133,7 @@
     player.bindEnded(ended);
     player.bindVolume(volume);
     player.bindMuted(muted);
+    player.bindSubtitles(subtitles);
 
     window['player'] = player;
     window['setFullscreen'] = setFullscreen;
@@ -181,6 +188,8 @@
   } else {
     player.unfreezeTimeUpdate();
   }
+
+  $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
 </script>
 
 <!-- TODO: consider radix-svelte & shadcn-svelte for more robust components (possible BREAKING CHANGES) -->
@@ -254,10 +263,10 @@
           {#if subtitleOn}
             <SubtitleOffButton on:click={null} />
           {:else}
-            <SubtitleOnButton on:click={player.mute.bind(player)} />
+            <SubtitleOnButton on:click={null} />
           {/if}
           <svelte:fragment slot="tooltip">
-            {#if $muted}
+            {#if !subtitleOn}
               Subtitle (C)
             {:else}
               Turn Off Subtitle (C)
@@ -266,6 +275,18 @@
         </Tooltipped>
         <svelte:fragment slot="menu">
           <!-- TODO: show discovered subtitles -->
+          <div class="flex flex-col items-center gap-1 mt-2">
+            {#if hasSubtitles}
+              {#each $subtitles.external as subtitle}
+                <SubtitleLabel format={subtitle.ext}>{subtitle.basename}</SubtitleLabel>
+              {/each}
+              {#each $subtitles.embedded as _, index}
+                <SubtitleLabel>Track {index + 1}</SubtitleLabel>
+              {/each}
+            {:else}
+              No subtitles detected
+            {/if}
+          </div>
         </svelte:fragment>
       </ContextMenu>
       <Tooltipped id="volume-button">
@@ -317,7 +338,7 @@
 
 <button on:click={openFile} class="text-white">OPEN FILE</button>
 
-<style>
+<style lang="postcss">
   video {
     height: 100%;
     width: 100%;
@@ -358,10 +379,10 @@
     }
   }
 
-  #slider {
+  /* #slider {
     flex: 1;
     box-sizing: border-box;
-  }
+  } */
 
   .slider {
     background-color: blueviolet;
