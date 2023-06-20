@@ -4,29 +4,19 @@
   import { appWindow } from '@tauri-apps/api/window';
 
   import { onMount, setContext, tick } from 'svelte';
-  import { createTooltip } from '@grail-ui/svelte';
   import { Slider } from 'fluent-svelte';
   import { fade } from 'svelte/transition';
-  import { cubicOut } from 'svelte/easing';
 
   import { Player } from '$lib/player/player';
   import { toDurationString, type Nullable } from '$lib/util';
 
-  import Icon from '$lib/components/Icon.svelte';
   import PlayButton from '$lib/components/buttons/PlayButton.svelte';
   import SkipNextButton from '$lib/components/buttons/SkipNextButton.svelte';
   import PauseButton from '$lib/components/buttons/PauseButton.svelte';
-  import VolumeOffButton from '$lib/components/buttons/VolumeOffButton.svelte';
-  import VolumeOnButton from '$lib/components/buttons/VolumeOnButton.svelte';
   import FullscreenButton from '$lib/components/buttons/FullscreenButton.svelte';
   import FullscreenExitButton from '$lib/components/buttons/FullscreenExitButton.svelte';
   import Tooltipped from '$lib/components/Tooltipped.svelte';
   import { writable } from 'svelte/store';
-  import SubtitleOffButton from '$lib/components/buttons/SubtitleOffButton.svelte';
-  import SubtitleOnButton from '$lib/components/buttons/SubtitleOnButton.svelte';
-  import ContextMenu from '$lib/components/ContextMenu.svelte';
-  import SubtitleLabel from '$lib/components/labels/SubtitleLabel.svelte';
-  import type { EmbeddedSubtitleMeta, ExternalSubtitleMeta } from '$lib/player/subtitle';
   import VolumeControl from '$lib/components/controls/VolumeControl.svelte';
   import SubtitleControl from '$lib/components/controls/SubtitleControl.svelte';
 
