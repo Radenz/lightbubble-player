@@ -3,7 +3,7 @@
   import { open } from '@tauri-apps/api/dialog';
   import { appWindow } from '@tauri-apps/api/window';
 
-  import { onMount, tick } from 'svelte';
+  import { onMount, setContext, tick } from 'svelte';
   import { createTooltip } from '@grail-ui/svelte';
   import { Slider } from 'fluent-svelte';
   import { fade } from 'svelte/transition';
@@ -27,6 +27,7 @@
   import ContextMenu from '$lib/components/ContextMenu.svelte';
   import SubtitleLabel from '$lib/components/labels/SubtitleLabel.svelte';
   import type { EmbeddedSubtitleMeta, ExternalSubtitleMeta } from '$lib/player/subtitle';
+  import VolumeControl from '$lib/components/controls/VolumeControl.svelte';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -34,6 +35,7 @@
   let src: string = '';
   let mediaElement: HTMLMediaElement;
   let player: Player = new Player();
+  setContext('player', player);
 
   let playbackDuration = writable(-1);
   let displayDuration = writable('0:00');
@@ -41,8 +43,6 @@
   let displayTime = writable('0:00');
   let paused = writable(false);
   let ended = writable(false);
-  let muted = writable(false);
-  let volume = writable(100);
   let subtitles = writable({
     external: [] as ExternalSubtitleMeta[],
     embedded: [] as EmbeddedSubtitleMeta[]
@@ -61,7 +61,6 @@
   let controlsHideTimeout: Nullable<number> = null;
   let controlsFrozen = false;
 
-  $: volumeSliderValue = $volume;
   $: subtitleOn = $subtitleId >= 0;
 
   let fullscreen = false;
@@ -129,6 +128,7 @@
       controlsHidden = true;
     }, CONTROLS_HIDE_TIMEOUT_MS);
   }
+  setContext('showControls', showControls);
 
   onMount(async () => {
     invoke('get_args').then(console.log);
@@ -140,8 +140,6 @@
     player.bindTimeString(displayTime);
     player.bindPaused(paused);
     player.bindEnded(ended);
-    player.bindVolume(volume);
-    player.bindMuted(muted);
     player.bindSubtitles(subtitles);
 
     window['player'] = player;
@@ -205,10 +203,6 @@
         controlsHidden = true;
       }, CONTROLS_HIDE_TIMEOUT_MS);
     }
-  });
-
-  volume.subscribe((_) => {
-    showControls();
   });
 
   $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
@@ -319,35 +313,8 @@
           </div>
         </svelte:fragment>
       </ContextMenu>
-      <Tooltipped id="volume-button">
-        {#if $muted}
-          <VolumeOffButton on:click={player.unmute.bind(player)} />
-        {:else}
-          <VolumeOnButton on:click={player.mute.bind(player)} />
-        {/if}
-        <svelte:fragment slot="tooltip">
-          {#if $muted}
-            Unmute (M)
-          {:else}
-            Mute (M)
-          {/if}
-        </svelte:fragment>
-      </Tooltipped>
-      <div id="volume-slider" class="w-32">
-        <!-- TODO: rip off the source, make custom slider -->
-        <Slider
-          class="slider cursor-pointer"
-          min={0}
-          max={100}
-          step={1}
-          bind:value={volumeSliderValue}
-          on:change={() => player.setVolume(volumeSliderValue)}
-        >
-          <svelte:fragment slot="tooltip" let:value>
-            <span class="volume-slider-tooltip">{value}%</span>
-          </svelte:fragment>
-        </Slider>
-      </div>
+      <VolumeControl />
+
       <Tooltipped id="fullscreen-button">
         {#if !fullscreen}
           <FullscreenButton on:click={setFullscreen} />
@@ -429,10 +396,5 @@
       left: 0;
       width: 100%;
     }
-  }
-
-  .volume-slider-tooltip {
-    @apply text-sm font-semibold;
-    font-family: 'Inter';
   }
 </style>
