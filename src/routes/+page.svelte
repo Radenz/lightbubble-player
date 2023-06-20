@@ -58,7 +58,6 @@
   let sliderAutoDropTimeout: Nullable<number> = null;
 
   let controlsHidden = true;
-  // TODO: unhide controls on paused and interactions
   let controlsHideTimeout: Nullable<number> = null;
   let controlsFrozen = false;
 
@@ -122,6 +121,15 @@
     sliderFrozen = false;
   }
 
+  function showControls() {
+    if (controlsHideTimeout) clearTimeout(controlsHideTimeout);
+    if (controlsFrozen) return;
+    controlsHidden = false;
+    controlsHideTimeout = setTimeout(() => {
+      controlsHidden = true;
+    }, CONTROLS_HIDE_TIMEOUT_MS);
+  }
+
   onMount(async () => {
     invoke('get_args').then(console.log);
 
@@ -156,12 +164,7 @@
     });
     window.addEventListener('mousemove', trySeek);
     window.addEventListener('mousemove', async () => {
-      if (controlsHideTimeout) clearTimeout(controlsHideTimeout);
-      if (controlsFrozen) return;
-      controlsHidden = false;
-      controlsHideTimeout = setTimeout(() => {
-        controlsHidden = true;
-      }, CONTROLS_HIDE_TIMEOUT_MS);
+      showControls();
     });
     window.addEventListener('mouseup', () => {
       sliderDragging = false;
@@ -202,6 +205,10 @@
         controlsHidden = true;
       }, CONTROLS_HIDE_TIMEOUT_MS);
     }
+  });
+
+  volume.subscribe((_) => {
+    showControls();
   });
 
   $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
