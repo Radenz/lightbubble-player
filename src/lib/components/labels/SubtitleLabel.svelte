@@ -5,7 +5,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<span
+<div
   on:click
   class="subtitle-label ml-4 mr-6 relative cursor-pointer opacity-75 hover:opacity-100 w-auto font-normal"
 >
@@ -15,11 +15,16 @@
       {format.toUpperCase()}
     </span>
   {/if}
-</span>
+</div>
 
-<style>
+<style lang="postcss">
+  .subtitle-label {
+    @apply my-1 table;
+  }
+
   .subtitle-format-badge {
-    font-size: 10px;
+    @apply tracking-wide;
+    font-size: 9px;
     font-weight: 400;
     left: calc(100% + 4px);
   }

@@ -275,14 +275,24 @@
         </Tooltipped>
         <svelte:fragment slot="menu">
           <!-- TODO: show discovered subtitles -->
-          <div class="flex flex-col items-center gap-1 mt-2">
+          <div>
             {#if hasSubtitles}
-              {#each $subtitles.external as subtitle}
-                <SubtitleLabel format={subtitle.ext}>{subtitle.basename}</SubtitleLabel>
-              {/each}
-              {#each $subtitles.embedded as _, index}
-                <SubtitleLabel>Track {index + 1}</SubtitleLabel>
-              {/each}
+              {#if $subtitles.external.length > 0}
+                <div>
+                  <div class="context-menu-header">External</div>
+                  {#each $subtitles.external as subtitle}
+                    <SubtitleLabel format={subtitle.ext}>{subtitle.basename}</SubtitleLabel>
+                  {/each}
+                </div>
+              {/if}
+              {#if $subtitles.embedded.length > 0}
+                <div>
+                  <div class="context-menu-header dense">Embedded</div>
+                  {#each $subtitles.embedded as _, index}
+                    <SubtitleLabel>Track {index + 1}</SubtitleLabel>
+                  {/each}
+                </div>
+              {/if}
             {:else}
               No subtitles detected
             {/if}
@@ -384,8 +394,21 @@
     box-sizing: border-box;
   } */
 
-  .slider {
-    background-color: blueviolet;
+  .context-menu-header {
+    @apply text-xs font-normal opacity-80 pb-1 my-3 relative;
+
+    &.dense {
+      @apply mb-1;
+    }
+
+    &::after {
+      content: '';
+      border-top: 1px solid rgba(128, 128, 128, 0.4);
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+    }
   }
 
   .volume-slider-tooltip {
