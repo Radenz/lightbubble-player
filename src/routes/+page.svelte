@@ -60,6 +60,7 @@
   let controlsHidden = true;
   // TODO: unhide controls on paused and interactions
   let controlsHideTimeout: Nullable<number> = null;
+  let controlsFrozen = false;
 
   $: volumeSliderValue = $volume;
   $: subtitleOn = $subtitleId >= 0;
@@ -156,6 +157,7 @@
     window.addEventListener('mousemove', trySeek);
     window.addEventListener('mousemove', async () => {
       if (controlsHideTimeout) clearTimeout(controlsHideTimeout);
+      if (controlsFrozen) return;
       controlsHidden = false;
       controlsHideTimeout = setTimeout(() => {
         controlsHidden = true;
@@ -188,6 +190,19 @@
   } else {
     player.unfreezeTimeUpdate();
   }
+
+  paused.subscribe((paused) => {
+    if (paused) {
+      controlsHidden = false;
+      if (controlsHideTimeout) clearTimeout(controlsHideTimeout);
+      controlsFrozen = true;
+    } else {
+      controlsFrozen = false;
+      controlsHideTimeout = setTimeout(() => {
+        controlsHidden = true;
+      }, CONTROLS_HIDE_TIMEOUT_MS);
+    }
+  });
 
   $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
 </script>
