@@ -28,6 +28,7 @@
   import SubtitleLabel from '$lib/components/labels/SubtitleLabel.svelte';
   import type { EmbeddedSubtitleMeta, ExternalSubtitleMeta } from '$lib/player/subtitle';
   import VolumeControl from '$lib/components/controls/VolumeControl.svelte';
+  import SubtitleControl from '$lib/components/controls/SubtitleControl.svelte';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -43,11 +44,6 @@
   let displayTime = writable('0:00');
   let paused = writable(false);
   let ended = writable(false);
-  let subtitles = writable({
-    external: [] as ExternalSubtitleMeta[],
-    embedded: [] as EmbeddedSubtitleMeta[]
-  });
-  let subtitleId = writable(-1);
 
   let slider: HTMLDivElement;
   let sliderThumb: HTMLDivElement;
@@ -60,8 +56,6 @@
   let controlsHidden = true;
   let controlsHideTimeout: Nullable<number> = null;
   let controlsFrozen = false;
-
-  $: subtitleOn = $subtitleId >= 0;
 
   let fullscreen = false;
 
@@ -140,7 +134,6 @@
     player.bindTimeString(displayTime);
     player.bindPaused(paused);
     player.bindEnded(ended);
-    player.bindSubtitles(subtitles);
 
     window['player'] = player;
     window['setFullscreen'] = setFullscreen;
@@ -204,8 +197,6 @@
       }, CONTROLS_HIDE_TIMEOUT_MS);
     }
   });
-
-  $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
 </script>
 
 <!-- TODO: consider radix-svelte & shadcn-svelte for more robust components (possible BREAKING CHANGES) -->
@@ -271,50 +262,8 @@
       </div>
     </div>
     <div id="controls-right" class="flex items-center gap-4">
-      <!-- TODO: don't hide controls if menu is opened -->
-      <ContextMenu id="subtitle-button" let:isOpen>
-        <!-- TODO: turn off subtitles on click -->
-        <Tooltipped id="subtitle-button" disabled={isOpen}>
-          {#if subtitleOn}
-            <SubtitleOffButton on:click={null} />
-          {:else}
-            <SubtitleOnButton on:click={null} />
-          {/if}
-          <svelte:fragment slot="tooltip">
-            {#if !subtitleOn}
-              Subtitle (C)
-            {:else}
-              Turn Off Subtitle (C)
-            {/if}
-          </svelte:fragment>
-        </Tooltipped>
-        <svelte:fragment slot="menu">
-          <div>
-            {#if hasSubtitles}
-              {#if $subtitles.external.length > 0}
-                <div>
-                  <div class="context-menu-header">External</div>
-                  {#each $subtitles.external as subtitle}
-                    <SubtitleLabel format={subtitle.ext}>{subtitle.basename}</SubtitleLabel>
-                  {/each}
-                </div>
-              {/if}
-              {#if $subtitles.embedded.length > 0}
-                <div>
-                  <div class="context-menu-header dense">Embedded</div>
-                  {#each $subtitles.embedded as _, index}
-                    <SubtitleLabel>Track {index + 1}</SubtitleLabel>
-                  {/each}
-                </div>
-              {/if}
-            {:else}
-              No subtitles detected
-            {/if}
-          </div>
-        </svelte:fragment>
-      </ContextMenu>
+      <SubtitleControl />
       <VolumeControl />
-
       <Tooltipped id="fullscreen-button">
         {#if !fullscreen}
           <FullscreenButton on:click={setFullscreen} />
@@ -380,21 +329,4 @@
     flex: 1;
     box-sizing: border-box;
   } */
-
-  .context-menu-header {
-    @apply text-xs font-light opacity-80 pb-1 my-3 relative;
-
-    &.dense {
-      @apply mb-1;
-    }
-
-    &::after {
-      content: '';
-      border-top: 1px solid rgba(128, 128, 128, 0.4);
-      position: absolute;
-      top: 100%;
-      left: 0;
-      width: 100%;
-    }
-  }
 </style>
