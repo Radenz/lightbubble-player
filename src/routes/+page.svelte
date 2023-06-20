@@ -256,7 +256,6 @@
     </div>
     <div id="controls-right" class="flex items-center gap-4">
       <!-- TODO: don't hide controls if menu is opened -->
-      <!-- TODO: add conditional rendering if no media is loaded, possibly need refactoring -->
       <ContextMenu id="subtitle-button" let:isOpen>
         <!-- TODO: turn off subtitles on click -->
         <Tooltipped id="subtitle-button" disabled={isOpen}>
@@ -274,7 +273,6 @@
           </svelte:fragment>
         </Tooltipped>
         <svelte:fragment slot="menu">
-          <!-- TODO: show discovered subtitles -->
           <div>
             {#if hasSubtitles}
               {#if $subtitles.external.length > 0}
@@ -395,7 +393,7 @@
   } */
 
   .context-menu-header {
-    @apply text-xs font-normal opacity-80 pb-1 my-3 relative;
+    @apply text-xs font-light opacity-80 pb-1 my-3 relative;
 
     &.dense {
       @apply mb-1;

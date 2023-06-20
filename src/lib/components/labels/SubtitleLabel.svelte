@@ -20,6 +20,9 @@
 <style lang="postcss">
   .subtitle-label {
     @apply my-1 table;
+    &:hover {
+      text-shadow: 0 0 1px white;
+    }
   }
 
   .subtitle-format-badge {
