@@ -21,6 +21,7 @@
   import SubtitleControl from '$lib/components/controls/SubtitleControl.svelte';
   import { captureCursor } from '$lib/actions/capture_cursor';
   import SettingsControl from '$lib/components/controls/SettingsControl.svelte';
+  import TimeDurationDisplay from '$lib/components/controls/TimeDurationDisplay.svelte';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -250,12 +251,7 @@
         <!-- TODO: add reactivity to playlist -->
         <SkipNextButton />
       </div>
-      <!-- TODO: resize based on displayTime & displayDuration text length -->
-      <div id="time" class="w-20 flex justify-between items-center">
-        <span style="flex-basis: 45%;">{$displayTime}</span>
-        <span class="text-center" style="flex-basis: 10%;">/</span>
-        <span class="text-right" style="flex-basis: 45%;">{$displayDuration}</span>
-      </div>
+      <TimeDurationDisplay time={$displayTime} duration={$displayDuration} />
     </div>
     <div id="controls-right" class="flex items-center gap-4">
       <SubtitleControl />
@@ -294,14 +290,6 @@
     position: absolute;
     top: 0;
     left: 0;
-  }
-
-  #time {
-    box-sizing: border-box;
-    color: white;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
   }
 
   #controls {
