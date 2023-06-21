@@ -85,7 +85,8 @@
 				"height": 600,
 				"resizable": true,
 				"title": "Lightbubble Media Player",
-				"width": 800
+				"width": 800,
+				"additionalBrowserArgs": "--enable-experimental-web-platform-features"
 			}
 		]
 	}
