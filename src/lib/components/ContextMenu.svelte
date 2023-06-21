@@ -18,8 +18,10 @@
   const { usePopoverTrigger, triggerAttrs, usePopover, popoverAttrs, closeButtonAttrs, open } =
     createPopover(config);
 
-  $: if (open) {
+  $: if ($open) {
     dispatch('open');
+  } else {
+    dispatch('close');
   }
 
   $: {
