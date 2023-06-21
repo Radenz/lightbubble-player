@@ -35,6 +35,7 @@
   let displayTime = writable('0:00');
   let paused = writable(false);
   let ended = writable(false);
+  let fullscreen = writable(false);
 
   let slider: HTMLDivElement;
   let sliderThumb: HTMLDivElement;
@@ -49,17 +50,15 @@
   let controlsFrozen = false;
   let cursorInsideControls = writable(false);
 
-  let fullscreen = false;
-
   function setFullscreen() {
     appWindow.setFullscreen(true).then(() => {
-      fullscreen = true;
+      $fullscreen = true;
     });
   }
 
   function exitFullscreen() {
     appWindow.setFullscreen(false).then(() => {
-      fullscreen = false;
+      $fullscreen = false;
     });
   }
 
@@ -139,6 +138,7 @@
     player.bindTimeString(displayTime);
     player.bindPaused(paused);
     player.bindEnded(ended);
+    player.bindFullscreen(fullscreen);
 
     window['player'] = player;
     window['setFullscreen'] = setFullscreen;
@@ -260,13 +260,13 @@
       <SubtitleControl />
       <VolumeControl />
       <Tooltipped id="fullscreen-button">
-        {#if !fullscreen}
+        {#if !$fullscreen}
           <FullscreenButton on:click={setFullscreen} />
         {:else}
           <FullscreenExitButton on:click={exitFullscreen} />
         {/if}
         <svelte:fragment slot="tooltip">
-          {#if fullscreen}
+          {#if $fullscreen}
             Exit Fullscreen (F)
           {:else}
             Fullscreen (F)
