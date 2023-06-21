@@ -230,7 +230,7 @@
     </Slider>
   </div>
   <div id="controls-bar" class="w-full flex justify-between">
-    <div id="controls-left" class="flex gap-4">
+    <div id="controls-left" class="flex gap-4 items-center">
       <Tooltipped id="play-button">
         {#if $paused || $ended}
           <PlayButton on:click={player.play.bind(player)} />
