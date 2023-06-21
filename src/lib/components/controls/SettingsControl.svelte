@@ -36,32 +36,36 @@
       value: 'Track 1'
     }
   ];
-
   let currentItem: Nullable<SettingsItem> = null;
+  let menu: ContextMenu;
 
   function resetItem() {
     currentItem = null;
   }
 
   function chooseItem(item: SettingsItem<IntoString>) {
-    console.log(item);
     if (!item.component) {
       // TODO: handle unselectable items
       return;
     }
     currentItem = item;
   }
+
+  function onChoose(event: CustomEvent) {
+    currentItem!.value = event.detail;
+    menu?.hide();
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<ContextMenu id="settings-button" pad={false} on:close={resetItem} let:isOpen>
+<ContextMenu bind:this={menu} id="settings-button" pad={false} on:close={resetItem} let:isOpen>
   <Tooltipped disabled={isOpen}>
     <SettingsButton />
     <svelte:fragment slot="tooltip">Settings</svelte:fragment>
   </Tooltipped>
   <svelte:fragment slot="menu">
     {#if currentItem}
-      <svelte:component this={currentItem.component} />
+      <svelte:component this={currentItem.component} on:choose={onChoose} />
     {:else}
       <div class="flex items-stretch flex-col gap-1">
         {#each items as item, index (index)}

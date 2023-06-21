@@ -1,11 +1,28 @@
 <script lang="ts">
+  import type { Player } from '$lib/player/player';
+  import { createEventDispatcher, getContext } from 'svelte';
+
+  const dispatch = createEventDispatcher();
+
   let choice = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+  const player = getContext('player') as Player;
+
+  function choose(rate: number) {
+    player.setPlaybackRate(rate);
+    dispatch('choose', rate);
+  }
 </script>
 
 <div class="flex items-stretch flex-col gap-1 w-32">
   <div class="context-menu-header">Speed</div>
   {#each choice as speed, index (index)}
-    <div class="setting-option">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div
+      on:click={() => {
+        choose(speed);
+      }}
+      class="setting-option"
+    >
       <span>{speed}</span>
     </div>
   {/each}

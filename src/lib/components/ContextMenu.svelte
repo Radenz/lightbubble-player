@@ -24,6 +24,14 @@
   } else {
     dispatch('close');
   }
+
+  export function show() {
+    $open = true;
+  }
+
+  export function hide() {
+    $open = false;
+  }
 </script>
 
 <div {id} use:usePopoverTrigger {...$triggerAttrs}>

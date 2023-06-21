@@ -278,6 +278,13 @@ export class Player {
     this.element.volume = volumePercentage / 100;
   }
 
+  public setPlaybackRate(rate: number) {
+    if (rate <= 0 || rate > 2) return;
+    if (!this.hasElementBound()) return;
+    this.element.playbackRate = rate;
+    this.element.defaultPlaybackRate = rate;
+  }
+
   // set volume(volumePercentage: number) {
   //   if (!this.hasElementBound()) return;
   //   this.element.volume = volumePercentage / 100;
