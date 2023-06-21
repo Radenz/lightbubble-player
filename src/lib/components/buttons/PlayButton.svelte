@@ -3,18 +3,11 @@
   class="cursor-pointer"
   on:click
   xmlns="http://www.w3.org/2000/svg"
-  width="32"
-  height="32"
-  viewBox="0 0 24 24"
->
-  <defs>
-    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
-      <stop offset="100%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <path
+  width="24"
+  height="24"
+  viewBox="0 0 256 256"
+  ><path
     fill="currentColor"
-    d="M9.525 18.025q-.5.325-1.012.038T8 17.175V6.825q0-.6.513-.888t1.012.038l8.15 5.175q.45.3.45.85t-.45.85l-8.15 5.175ZM10 12Zm0 3.35L15.25 12L10 8.65v6.7Z"
+    d="M234.49 111.07L90.41 22.94A20 20 0 0 0 60 39.87v176.26a20 20 0 0 0 30.41 16.93l144.08-88.13a19.82 19.82 0 0 0 0-33.86ZM84 208.85V47.15L216.16 128Z"
   /></svg
 >
