@@ -51,6 +51,8 @@
   let controlsHideTimeout: Nullable<number> = null;
   let controlsFrozen = false;
   let cursorInsideControls = writable(false);
+  let openContextMenus = writable([] as string[]);
+  setContext('openContextMenus', openContextMenus);
 
   function setFullscreen() {
     appWindow.setFullscreen(true).then(() => {
@@ -192,7 +194,9 @@
     player.unfreezeTimeUpdate();
   }
 
-  $: $paused || $cursorInsideControls ? freezeControls() : unfreezeControls();
+  $: $paused || $cursorInsideControls || $openContextMenus.length > 0
+    ? freezeControls()
+    : unfreezeControls();
 </script>
 
 <!-- TODO: consider radix-svelte & shadcn-svelte for more robust components (possible BREAKING CHANGES) -->

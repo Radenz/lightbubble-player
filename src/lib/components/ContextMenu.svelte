@@ -1,11 +1,12 @@
 <script lang="ts">
   import { createPopover, type PopoverConfig } from '@grail-ui/svelte/popover';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
   import InvisibleScrim from './misc/InvisibleScrim.svelte';
+  import type { Writable } from 'svelte/store';
 
-  export let id: string | undefined = undefined;
+  export let id: string;
   export let pad = true;
 
   const config: PopoverConfig = {
@@ -15,14 +16,18 @@
     }
   };
   const dispatch = createEventDispatcher();
+  const openContextMenus = getContext('openContextMenus') as Writable<string[]>;
 
   const { usePopoverTrigger, triggerAttrs, usePopover, popoverAttrs, closeButtonAttrs, open } =
     createPopover(config);
 
   $: if ($open) {
     dispatch('open');
+    if (!$openContextMenus.includes(id)) $openContextMenus = [...$openContextMenus, id];
   } else {
     dispatch('close');
+    if ($openContextMenus.includes(id))
+      $openContextMenus = $openContextMenus.filter((contextMenuId) => contextMenuId !== id);
   }
 
   export function show() {
