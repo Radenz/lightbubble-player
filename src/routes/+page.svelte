@@ -20,6 +20,7 @@
   import VolumeControl from '$lib/components/controls/VolumeControl.svelte';
   import SubtitleControl from '$lib/components/controls/SubtitleControl.svelte';
   import { captureCursor } from '$lib/actions/capture_cursor';
+  import SettingsControl from '$lib/components/controls/SettingsControl.svelte';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -259,6 +260,7 @@
     <div id="controls-right" class="flex items-center gap-4">
       <SubtitleControl />
       <VolumeControl />
+      <SettingsControl />
       <Tooltipped id="fullscreen-button">
         {#if !$fullscreen}
           <FullscreenButton on:click={setFullscreen} />

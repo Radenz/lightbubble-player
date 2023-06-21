@@ -1,9 +1,14 @@
+import type { SvelteComponentTyped } from 'svelte';
+
 export type Listener<T> = (event: T) => unknown;
 export interface ListenerMap<T> {
   [key: number]: Listener<T>;
 }
 
 export type Nullable<T> = T | null;
+export type IntoString = string | number | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Component = new (...args: any[]) => SvelteComponentTyped;
 
 const HOUR_SECONDS = 3600;
 const MINUTE_SECONDS = 60;

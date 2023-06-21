@@ -6,6 +6,7 @@
   import InvisibleScrim from './misc/InvisibleScrim.svelte';
 
   export let id: string | undefined = undefined;
+  export let pad = true;
 
   const config: PopoverConfig = {
     positioning: {
@@ -32,7 +33,9 @@
 {#if $open}
   <InvisibleScrim />
   <div
-    class="menu px-4 py-2 rounded text-sm text-white font-medium"
+    class="menu rounded text-sm text-white font-medium"
+    class:px-4={pad}
+    class:py-2={pad}
     transition:fade={{ duration: 250, easing: cubicOut }}
     use:usePopover
     {...$popoverAttrs}
