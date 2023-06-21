@@ -3,6 +3,7 @@
   import { createEventDispatcher } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
+  import InvisibleScrim from './misc/InvisibleScrim.svelte';
 
   export let id: string | undefined = undefined;
   export let isOpen = false;
@@ -34,6 +35,7 @@
 </div>
 
 {#if $open}
+  <InvisibleScrim />
   <div
     class="menu px-4 py-2 rounded text-sm text-white font-medium"
     transition:fade={{ duration: 250, easing: cubicOut }}
