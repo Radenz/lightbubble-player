@@ -5,6 +5,7 @@
   import { fade } from 'svelte/transition';
   import InvisibleScrim from './misc/InvisibleScrim.svelte';
   import type { Writable } from 'svelte/store';
+  import type { Nullable } from '$lib/util';
 
   export let id: string;
   export let pad = true;
@@ -16,18 +17,17 @@
     }
   };
   const dispatch = createEventDispatcher();
-  const openContextMenus = getContext('openContextMenus') as Writable<string[]>;
+  const openContextMenu = getContext('openContextMenu') as Writable<Nullable<string>>;
 
   const { usePopoverTrigger, triggerAttrs, usePopover, popoverAttrs, closeButtonAttrs, open } =
     createPopover(config);
 
   $: if ($open) {
     dispatch('open');
-    if (!$openContextMenus.includes(id)) $openContextMenus = [...$openContextMenus, id];
+    $openContextMenu = id;
   } else {
     dispatch('close');
-    if ($openContextMenus.includes(id))
-      $openContextMenus = $openContextMenus.filter((contextMenuId) => contextMenuId !== id);
+    $openContextMenu = null;
   }
 
   export function show() {

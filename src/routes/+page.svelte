@@ -16,7 +16,7 @@
   import FullscreenButton from '$lib/components/buttons/FullscreenButton.svelte';
   import FullscreenExitButton from '$lib/components/buttons/FullscreenExitButton.svelte';
   import Tooltipped from '$lib/components/Tooltipped.svelte';
-  import { writable } from 'svelte/store';
+  import { writable, type Writable } from 'svelte/store';
   import VolumeControl from '$lib/components/controls/VolumeControl.svelte';
   import SubtitleControl from '$lib/components/controls/SubtitleControl.svelte';
   import { captureCursor } from '$lib/actions/capture_cursor';
@@ -51,8 +51,8 @@
   let controlsHideTimeout: Nullable<number> = null;
   let controlsFrozen = false;
   let cursorInsideControls = writable(false);
-  let openContextMenus = writable([] as string[]);
-  setContext('openContextMenus', openContextMenus);
+  let openContextMenu: Writable<Nullable<string>> = writable(null);
+  setContext('openContextMenu', openContextMenu);
 
   function setFullscreen() {
     appWindow.setFullscreen(true).then(() => {
@@ -194,9 +194,7 @@
     player.unfreezeTimeUpdate();
   }
 
-  $: $paused || $cursorInsideControls || $openContextMenus.length > 0
-    ? freezeControls()
-    : unfreezeControls();
+  $: $paused || $cursorInsideControls || $openContextMenu ? freezeControls() : unfreezeControls();
 </script>
 
 <!-- TODO: consider radix-svelte & shadcn-svelte for more robust components (possible BREAKING CHANGES) -->
