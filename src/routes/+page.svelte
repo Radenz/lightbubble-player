@@ -19,6 +19,7 @@
   import { writable } from 'svelte/store';
   import VolumeControl from '$lib/components/controls/VolumeControl.svelte';
   import SubtitleControl from '$lib/components/controls/SubtitleControl.svelte';
+  import { captureCursor } from '$lib/actions/capture_cursor';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -46,6 +47,7 @@
   let controlsHidden = true;
   let controlsHideTimeout: Nullable<number> = null;
   let controlsFrozen = false;
+  let cursorInsideControls = writable(false);
 
   let fullscreen = false;
 
@@ -102,6 +104,19 @@
   function unfreezeSlider() {
     if (sliderAutoDropTimeout) clearTimeout(sliderAutoDropTimeout!);
     sliderFrozen = false;
+  }
+
+  function freezeControls() {
+    controlsHidden = false;
+    if (controlsHideTimeout) clearTimeout(controlsHideTimeout);
+    controlsFrozen = true;
+  }
+
+  function unfreezeControls() {
+    controlsFrozen = false;
+    controlsHideTimeout = setTimeout(() => {
+      controlsHidden = true;
+    }, CONTROLS_HIDE_TIMEOUT_MS);
   }
 
   function showControls() {
@@ -175,18 +190,7 @@
     player.unfreezeTimeUpdate();
   }
 
-  paused.subscribe((paused) => {
-    if (paused) {
-      controlsHidden = false;
-      if (controlsHideTimeout) clearTimeout(controlsHideTimeout);
-      controlsFrozen = true;
-    } else {
-      controlsFrozen = false;
-      controlsHideTimeout = setTimeout(() => {
-        controlsHidden = true;
-      }, CONTROLS_HIDE_TIMEOUT_MS);
-    }
-  });
+  $: $paused || $cursorInsideControls ? freezeControls() : unfreezeControls();
 </script>
 
 <!-- TODO: consider radix-svelte & shadcn-svelte for more robust components (possible BREAKING CHANGES) -->
@@ -204,6 +208,7 @@
   transition:fade
   class:invisible={controlsHidden}
   hidden={controlsHidden}
+  use:captureCursor={cursorInsideControls}
 >
   <div id="slider">
     <Slider
