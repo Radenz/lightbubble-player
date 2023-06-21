@@ -6,7 +6,6 @@
   import InvisibleScrim from './misc/InvisibleScrim.svelte';
 
   export let id: string | undefined = undefined;
-  export let isOpen = false;
 
   const config: PopoverConfig = {
     positioning: {
@@ -24,14 +23,10 @@
   } else {
     dispatch('close');
   }
-
-  $: {
-    isOpen = $open;
-  }
 </script>
 
 <div {id} use:usePopoverTrigger {...$triggerAttrs}>
-  <slot {isOpen} />
+  <slot isOpen={$open} />
 </div>
 
 {#if $open}
