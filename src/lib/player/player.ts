@@ -68,13 +68,13 @@ export class Player {
 
   private registerHotkeys() {
     HotkeyRegistry.register('M', () => {
-      get(this.muted) ? this.unmute() : this.mute();
+      this.$muted ? this.unmute() : this.mute();
     });
     HotkeyRegistry.register('F', () => {
-      get(this.fullscreen) ? this.exitFullscreen() : this.setFullscreen();
+      this.$fullscreen ? this.exitFullscreen() : this.setFullscreen();
     });
     HotkeyRegistry.register('Space', () => {
-      get(this.paused) || get(this.ended) ? this.play() : this.pause();
+      this.$paused || this.$ended ? this.play() : this.pause();
     });
     HotkeyRegistry.register('Up', () => {
       this.setVolume(Math.min(100, this.$volume + 5));
@@ -269,6 +269,7 @@ export class Player {
   public seek(time: Time) {
     if (!this.isLoaded()) return;
     this.element.currentTime = time;
+    if (this.$ended) this.play();
   }
 
   public setVolume(volumePercentage: number) {
