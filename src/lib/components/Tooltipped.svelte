@@ -39,7 +39,8 @@
 <style>
   .tooltip {
     font-family: 'Inter';
-    background-color: #474747;
+    background-color: rgba(16, 16, 16, 0.6);
+    backdrop-filter: blur(4px);
     z-index: 9999;
   }
 </style>
