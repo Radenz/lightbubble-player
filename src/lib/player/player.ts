@@ -4,7 +4,6 @@ import { readDir } from '@tauri-apps/api/fs';
 import { dirname, extname, basename } from '@tauri-apps/api/path';
 import { derived, writable, type Unsubscriber, type Writable, get } from 'svelte/store';
 import {
-  SUPPORTED_SUBTITLE_FORMATS,
   type ExternalSubtitleMeta,
   type EmbeddedSubtitleMeta,
   type SubtitlesMeta,
@@ -13,6 +12,7 @@ import {
 import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api';
+import type { AudioTrack, AudioTrackList } from './audio';
 
 type Time = number;
 
@@ -56,6 +56,8 @@ export class Player {
   private unsubscribeSubtitles: Nullable<Unsubscriber> = null;
 
   private source: Nullable<string> = null;
+
+  private loadedCallbacks: (() => unknown)[] = [];
 
   // * * * * * * * * * * * * * * * *
   // Construction
@@ -126,6 +128,7 @@ export class Player {
       this.paused.set(false);
       this.refreshConfig();
       this.discoverSubtitles();
+      this.loadedCallbacks.forEach((callback) => callback());
     });
     element.addEventListener('timeupdate', async () => {
       this.onTimeUpdated();
@@ -248,6 +251,18 @@ export class Player {
     return get(this.fullscreen);
   }
 
+  get audioTracks(): Nullable<AudioTrackList> {
+    return this.element ? this.element['audioTracks'] : null;
+  }
+
+  get selectedAudioTracks(): Nullable<AudioTrack> {
+    if (!this.audioTracks) return null;
+    for (const track of this.audioTracks) {
+      if (track.enabled) return track;
+    }
+    return null;
+  }
+
   // * * * * * * * * * * * * * * * *
   // Playback methods
 
@@ -314,6 +329,20 @@ export class Player {
     this.timeUpdateFrozen = false;
   }
 
+  public chooseAudioTrack(id: string) {
+    if (this.audioTracks) {
+      const selectedTrack = this.audioTracks.getTrackById(id);
+
+      if (selectedTrack) {
+        for (const track of this.audioTracks) {
+          track.enabled = track === selectedTrack;
+        }
+        // ? Workaround for freezing video after active audio track gets disabled
+        this.seek(this.$time);
+      }
+    }
+  }
+
   // * * * * * * * * * * * * * * * *
   // Event methods
 
@@ -324,6 +353,10 @@ export class Player {
 
   private onTimeUpdated() {
     this.time.set(this.element.currentTime);
+  }
+
+  public onLoaded(callback: () => unknown) {
+    this.loadedCallbacks.push(callback);
   }
 
   // * * * * * * * * * * * * * * * *

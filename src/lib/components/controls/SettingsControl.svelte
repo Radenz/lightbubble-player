@@ -1,5 +1,6 @@
 <script lang="ts" context="module">
   import type { Component, IntoString, Nullable } from '$lib/util';
+  import { getContext } from 'svelte';
 
   interface SettingsItem<T = IntoString> {
     label: string;
@@ -13,7 +14,9 @@
   import ContextMenu from '../ContextMenu.svelte';
   import Tooltipped from '../Tooltipped.svelte';
   import SettingsButton from '../buttons/SettingsButton.svelte';
+  import AudioMenu from './settings/AudioMenu.svelte';
   import SpeedMenu from './settings/SpeedMenu.svelte';
+  import type { Player } from '$lib/player/player';
 
   const items: SettingsItem[] = [
     {
@@ -25,19 +28,22 @@
       label: 'Loop',
       value: 'Off'
     },
-    // TODO: impl changing tracks if possible using HTML5 player
-    // otherwise decode video on Rust backend (?)
     {
       label: 'Video Track',
-      value: 'Track 1'
+      value: 'None'
     },
     {
       label: 'Audio Track',
-      value: 'Track 1'
+      value: 'None',
+      component: AudioMenu
     }
   ];
   let currentItem: Nullable<SettingsItem> = null;
   let menu: ContextMenu;
+  const player = getContext('player') as Player;
+  player.onLoaded(() => {
+    items[3].value = player.selectedAudioTracks!.label;
+  });
 
   function resetItem() {
     currentItem = null;
