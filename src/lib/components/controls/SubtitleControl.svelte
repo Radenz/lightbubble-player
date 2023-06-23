@@ -22,7 +22,7 @@
 </script>
 
 <!-- TODO: don't hide controls if menu is opened -->
-<ContextMenu id="subtitle-button" pad={false} let:isOpen>
+<ContextMenu id="subtitle-button" pad={!hasSubtitles} let:isOpen>
   <!-- TODO: turn off subtitles on click -->
   <Tooltipped id="subtitle-button" disabled={isOpen}>
     {#if subtitleOn}
