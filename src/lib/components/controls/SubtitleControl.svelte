@@ -22,7 +22,7 @@
 </script>
 
 <!-- TODO: don't hide controls if menu is opened -->
-<ContextMenu id="subtitle-button" let:isOpen>
+<ContextMenu id="subtitle-button" pad={false} let:isOpen>
   <!-- TODO: turn off subtitles on click -->
   <Tooltipped id="subtitle-button" disabled={isOpen}>
     {#if subtitleOn}
@@ -66,7 +66,7 @@
 
 <style lang="postcss">
   .context-menu-header {
-    @apply text-xs font-light opacity-80 pb-1 my-3 relative;
+    /* @apply text-xs font-light opacity-80 pb-1 my-3 relative;
 
     &.dense {
       @apply mb-1;
@@ -79,6 +79,17 @@
       top: 100%;
       left: 0;
       width: 100%;
+    } */
+    @apply rounded px-4 opacity-80 my-3 relative;
+
+    &::after {
+      @apply mx-3;
+      content: '';
+      border-top: 1px solid rgba(128, 128, 128, 0.4);
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: calc(100% - 24px);
     }
   }
 </style>
