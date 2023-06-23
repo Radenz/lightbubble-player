@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AudioTrack } from '$lib/player/audio';
+  import type { AudioTrack, NamedAudioTrack } from '$lib/player/audio';
   import type { Player } from '$lib/player/player';
   import { createEventDispatcher, getContext } from 'svelte';
 
@@ -8,10 +8,9 @@
   const player = getContext('player') as Player;
   const audioTracks = player.audioTracks;
 
-  function choose(track: AudioTrack) {
+  function choose(track: NamedAudioTrack) {
     player.chooseAudioTrack(track.id);
-    // TODO: use i18n api instead of label
-    dispatch('choose', track.label);
+    dispatch('choose', track.name);
   }
 </script>
 

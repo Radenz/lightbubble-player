@@ -42,7 +42,7 @@
   let menu: ContextMenu;
   const player = getContext('player') as Player;
   player.onLoaded(() => {
-    items[3].value = player.selectedAudioTracks!.label;
+    items[3].value = player.selectedAudioTracks!.name;
   });
 
   function resetItem() {

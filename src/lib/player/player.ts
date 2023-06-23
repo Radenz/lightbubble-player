@@ -12,7 +12,7 @@ import {
 import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api';
-import type { AudioTrack, AudioTrackList } from './audio';
+import type { AudioTrackList, NamedAudioTrack, NamedAudioTrackList } from './audio';
 
 type Time = number;
 
@@ -251,11 +251,17 @@ export class Player {
     return get(this.fullscreen);
   }
 
-  get audioTracks(): Nullable<AudioTrackList> {
-    return this.element ? this.element['audioTracks'] : null;
+  get audioTracks(): Nullable<NamedAudioTrackList> {
+    if (!this.element) return null;
+    const tracks: AudioTrackList = this.element['audioTracks'];
+    let index = 1;
+    for (const track of tracks) {
+      track.name = track.language === 'und' ? `Track ${index++}` : track.label;
+    }
+    return tracks as NamedAudioTrackList;
   }
 
-  get selectedAudioTracks(): Nullable<AudioTrack> {
+  get selectedAudioTracks(): Nullable<NamedAudioTrack> {
     if (!this.audioTracks) return null;
     for (const track of this.audioTracks) {
       if (track.enabled) return track;
