@@ -52,7 +52,7 @@
 {#if $open}
   <InvisibleScrim />
   <div
-    class="menu min-w-[160px] rounded text-sm text-white font-medium overflow-y-scroll"
+    class="menu min-w-[160px] rounded text-sm text-white font-medium overflow-y-auto"
     class:px-4={pad}
     class:py-2={pad}
     style:--max-height={maxHeight}
