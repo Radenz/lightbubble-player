@@ -13,7 +13,7 @@
   }
 </script>
 
-<div class="flex items-stretch flex-col gap-1 w-32">
+<div class="flex items-stretch flex-col gap-1">
   <div class="context-menu-header">Speed</div>
   {#each choice as speed, index (index)}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
