@@ -251,6 +251,10 @@ export class Player {
     return get(this.fullscreen);
   }
 
+  get $subtitles() {
+    return get(this.subtitles);
+  }
+
   get audioTracks(): Nullable<NamedAudioTrackList> {
     if (!this.element) return null;
     const tracks: AudioTrackList = this.element['audioTracks'];
@@ -385,7 +389,6 @@ export class Player {
 
       console.log(`found streams`, streams);
 
-      // TODO: store other stream metadata
       this.subtitles.update((subtitles) => {
         subtitles.embedded = streams.subtitle;
         return subtitles;

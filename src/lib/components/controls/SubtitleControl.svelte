@@ -4,7 +4,11 @@
   import Tooltipped from '../Tooltipped.svelte';
   import type { Player } from '$lib/player/player';
   import { writable } from 'svelte/store';
-  import type { EmbeddedSubtitleMeta, ExternalSubtitleMeta } from '$lib/player/subtitle';
+  import {
+    labelOf,
+    type EmbeddedSubtitleMeta,
+    type ExternalSubtitleMeta
+  } from '$lib/player/subtitle';
   import SubtitleOffButton from '../buttons/SubtitleOffButton.svelte';
   import SubtitleOnButton from '../buttons/SubtitleOnButton.svelte';
   import SubtitleLabel from '../labels/SubtitleLabel.svelte';
@@ -52,8 +56,8 @@
         {#if $subtitles.embedded.length > 0}
           <div>
             <div class="context-menu-header dense">Embedded</div>
-            {#each $subtitles.embedded as _, index}
-              <SubtitleLabel>Track {index + 1}</SubtitleLabel>
+            {#each $subtitles.embedded as track, index}
+              <SubtitleLabel>{labelOf(track, index + 1)}</SubtitleLabel>
             {/each}
           </div>
         {/if}

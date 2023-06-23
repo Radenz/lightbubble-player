@@ -1,6 +1,8 @@
 #![allow(unused)]
 
 use crate::prelude::*;
+use std::collections::HashMap;
+use std::ops::{Deref, DerefMut};
 use std::{fs, path::Path};
 
 use ffmpeg::codec::context::Context;
@@ -8,6 +10,9 @@ use ffmpeg::format::stream::Stream;
 use ffmpeg::{media, subtitle::Rect, Frame, Subtitle};
 use ffmpeg_next as ffmpeg;
 use serde::Serialize;
+
+// NOTE: subject to change
+const USEFUL_STREAM_METADATA_KEY: [&str; 2] = ["language", "title"];
 
 #[derive(Serialize)]
 pub struct Streams {
@@ -39,14 +44,45 @@ impl Streams {
 }
 
 #[derive(Serialize)]
-pub struct StreamMeta {
-    id: i32,
-    index: usize,
+#[serde(untagged)]
+pub enum StreamMetaValue {
+    String(String),
+    Number(f64),
+}
+
+impl StreamMetaValue {
+    pub fn string(value: impl Into<String>) -> Self {
+        Self::String(value.into())
+    }
+
+    pub fn number<T>(value: T) -> Self
+    where
+        T: Into<f64>,
+    {
+        Self::Number(value.into())
+    }
+}
+
+#[derive(Serialize)]
+pub struct StreamMeta(HashMap<String, StreamMetaValue>);
+
+impl Deref for StreamMeta {
+    type Target = HashMap<String, StreamMetaValue>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for StreamMeta {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 impl StreamMeta {
-    pub fn new(id: i32, index: usize) -> Self {
-        Self { id, index }
+    pub fn new() -> Self {
+        Self(HashMap::new())
     }
 }
 
@@ -99,8 +135,22 @@ impl StreamExt for Stream<'_> {
     }
 
     fn meta(&self) -> StreamMeta {
+        use StreamMetaValue as Value;
+
         let id = self.id();
         let index = self.index();
-        StreamMeta::new(id, index)
+        let metadata = self.metadata();
+
+        let mut meta = StreamMeta::new();
+        meta.insert("id".to_owned(), Value::number(id));
+        meta.insert("index".to_owned(), Value::number(index as f64));
+
+        for (key, value) in metadata.iter() {
+            if USEFUL_STREAM_METADATA_KEY.contains(&key) {
+                meta.insert(key.to_owned(), Value::string(value));
+            }
+        }
+
+        meta
     }
 }

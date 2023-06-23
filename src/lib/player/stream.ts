@@ -7,6 +7,7 @@
 interface StreamMeta {
   id: number;
   index: number;
+  [key: string]: string | number;
 }
 
 interface Streams {
