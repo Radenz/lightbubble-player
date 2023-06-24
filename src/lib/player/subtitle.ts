@@ -1,3 +1,5 @@
+import slugify from 'slugify';
+
 // TODO: add more format supported by libavcodec
 export const SUPPORTED_SUBTITLE_FORMATS = ['ass', 'srt', 'vtt'] as const;
 export type SubtitleFormat = (typeof SUPPORTED_SUBTITLE_FORMATS)[number];
@@ -24,6 +26,10 @@ const LANGUAGE_NAME = new Intl.DisplayNames(['en'], {
   type: 'language'
 });
 
+function normalize(string: string) {
+  return slugify(string, ' ');
+}
+
 export function labelOf(meta: EmbeddedSubtitleMeta, fallbackId: number): string {
   if (!meta['language']) {
     return `Track ${fallbackId}`;
@@ -35,7 +41,11 @@ export function labelOf(meta: EmbeddedSubtitleMeta, fallbackId: number): string 
 
     if (meta['title']) {
       const title = meta['title'] as string;
-      if (title.includes(language)) return title;
+      const normalizedLanguage = normalize(language);
+      const normalizedTitle = normalize(title);
+      // FIXME: consider language is substring of title,
+      // but contains non latin characters
+      if (normalizedTitle === normalizedLanguage) return language;
       return `${language} (${title})`;
     }
     return language;
