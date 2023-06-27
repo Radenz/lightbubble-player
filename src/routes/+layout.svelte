@@ -3,13 +3,6 @@
   import { onMount } from 'svelte';
   import './styles.css';
   import 'fluent-svelte/theme.css';
-  import { rootElement } from '$lib/store/root';
-
-  let root: HTMLElement;
-
-  onMount(() => {
-    rootElement.set(root);
-  });
 </script>
 
 <svelte:head>
@@ -19,7 +12,7 @@
   />
 </svelte:head>
 
-<div bind:this={root} class="app">
+<div class="app">
   <slot />
 </div>
 
