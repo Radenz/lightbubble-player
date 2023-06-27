@@ -22,6 +22,7 @@
   import { captureCursor } from '$lib/actions/capture_cursor';
   import SettingsControl from '$lib/components/controls/SettingsControl.svelte';
   import TimeDurationDisplay from '$lib/components/controls/TimeDurationDisplay.svelte';
+  import SubtitleDisplay from '$lib/components/SubtitleDisplay.svelte';
 
   const SEEK_AUTODROP_DELAY_MS = 600;
   const CONTROLS_HIDE_TIMEOUT_MS = 1000;
@@ -206,6 +207,7 @@
 
 <!-- svelte-ignore a11y-media-has-caption -->
 <video autoplay bind:this={mediaElement} {src} />
+<SubtitleDisplay />
 <div
   id="controls"
   class="text-white absolute flex flex-col items-stretch w-full bottom-0 px-6 py-4 opacity-100 duration-150"

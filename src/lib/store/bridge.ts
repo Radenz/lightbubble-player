@@ -15,7 +15,7 @@ export type BridgeRelativeFlow = 'self' | 'other' | 'both' | 'none';
  * Pipe-like store couple which can be synchronized and desynchronized
  * on demand.
  */
-class Bridge<T> implements Writable<T> {
+export class Bridge<T> implements Writable<T> {
   private store: Writable<T>;
   public other: Bridge<T>;
   private kind: BridgeKind;

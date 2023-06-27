@@ -13,6 +13,8 @@ import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api';
 import type { AudioTrackList, NamedAudioTrack, NamedAudioTrackList } from './audio';
+import type { Bridge } from '$lib/store/bridge';
+import { subtitleDisplay } from '$lib/store/player';
 
 type Time = number;
 
@@ -56,6 +58,7 @@ export class Player {
   private unsubscribeSubtitles: Nullable<Unsubscriber> = null;
 
   private source: Nullable<string> = null;
+  private subtitleDisplay: Bridge<string>;
 
   private loadedCallbacks: (() => unknown)[] = [];
 
@@ -64,8 +67,8 @@ export class Player {
 
   constructor() {
     this.registerHotkeys();
-
-    this.subtitles.subscribe(console.log);
+    this.subtitleDisplay = subtitleDisplay.other;
+    this.subtitleDisplay.setRelativeFlow('other');
   }
 
   private registerHotkeys() {

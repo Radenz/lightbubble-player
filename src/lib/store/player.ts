@@ -8,4 +8,5 @@ export const displayTime = bridge('0:00');
 export const paused = bridge(false);
 export const ended = bridge(false);
 export const fullscreen = bridge(false);
+
 export const subtitleDisplay = bridge('');
