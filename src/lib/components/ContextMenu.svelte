@@ -9,6 +9,7 @@
 
   export let id: string;
   export let pad = true;
+  export let isOpen: Nullable<Writable<boolean>> = null;
 
   let height: number = window.innerHeight;
 
@@ -24,6 +25,8 @@
   const { usePopoverTrigger, triggerAttrs, usePopover, popoverAttrs, closeButtonAttrs, open } =
     createPopover(config);
 
+  isOpen = open;
+
   $: if ($open) {
     dispatch('open');
     $openContextMenu = id;
@@ -38,6 +41,10 @@
 
   export function hide() {
     $open = false;
+  }
+
+  export function toggle() {
+    $open = !$open;
   }
 
   $: maxHeight = `${height / 2}px`;

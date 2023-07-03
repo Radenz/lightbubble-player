@@ -209,6 +209,10 @@ export class Player {
     return this._element as HTMLMediaElement;
   }
 
+  get src(): Nullable<string> {
+    return this.source;
+  }
+
   public isLoaded(): boolean {
     if (!this.hasElementBound()) return false;
     return this.element.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA;

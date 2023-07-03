@@ -11,6 +11,10 @@ use ffmpeg::{media, subtitle::Rect, Frame, Subtitle};
 use ffmpeg_next as ffmpeg;
 use serde::Serialize;
 
+pub mod codec;
+pub mod subtitle;
+pub mod util;
+
 // NOTE: subject to change
 const USEFUL_STREAM_METADATA_KEY: [&str; 2] = ["language", "title"];
 
@@ -86,6 +90,7 @@ impl StreamMeta {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StreamKind {
     Video,
     Audio,
@@ -115,7 +120,7 @@ pub fn discover_streams(path: String) -> Streams {
     streams
 }
 
-trait StreamExt {
+pub trait StreamExt {
     fn kind(&self) -> StreamKind;
     fn meta(&self) -> StreamMeta;
 }

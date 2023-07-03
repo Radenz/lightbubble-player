@@ -11,6 +11,7 @@ export interface ExternalSubtitleMeta {
 }
 
 export type EmbeddedSubtitleMeta = StreamMeta;
+export type SubtitleMeta = EmbeddedSubtitleMeta | ExternalSubtitleMeta;
 
 export interface SubtitlesMeta {
   external: ExternalSubtitleMeta[];
@@ -52,4 +53,12 @@ export function labelOf(meta: EmbeddedSubtitleMeta, fallbackId: number): string 
   } catch (_) {
     return `Track ${fallbackId}`;
   }
+}
+
+export function isEmbedded(meta: SubtitleMeta): meta is EmbeddedSubtitleMeta {
+  return !isExternal(meta);
+}
+
+export function isExternal(meta: SubtitleMeta): meta is ExternalSubtitleMeta {
+  return !!meta.path;
 }

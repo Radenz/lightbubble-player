@@ -3,15 +3,21 @@
   import ContextMenu from '../ContextMenu.svelte';
   import Tooltipped from '../Tooltipped.svelte';
   import type { Player } from '$lib/player/player';
-  import { writable } from 'svelte/store';
+  import { writable, type Writable } from 'svelte/store';
   import {
     labelOf,
     type EmbeddedSubtitleMeta,
-    type ExternalSubtitleMeta
+    type ExternalSubtitleMeta,
+    isEmbedded
   } from '$lib/player/subtitle';
   import SubtitleOffButton from '../buttons/SubtitleOffButton.svelte';
   import SubtitleOnButton from '../buttons/SubtitleOnButton.svelte';
   import SubtitleLabel from '../labels/SubtitleLabel.svelte';
+  import { invoke } from '@tauri-apps/api/tauri';
+  import type { Nullable } from '$lib/util';
+
+  let menu: ContextMenu;
+  let isMenuOpen: Nullable<Writable<boolean>> = null;
 
   const player = getContext('player') as Player;
   const subtitles = writable({
@@ -20,19 +26,50 @@
   });
   player.bindSubtitles(subtitles);
   // TODO: adjust based on subtitle metadata
-  const subtitleId = writable(-1);
+  const subtitleIndex = writable(-1);
   $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
-  $: subtitleOn = $subtitleId >= 0;
+  $: subtitleOn = $subtitleIndex >= 0;
+
+  function chooseSubtitle(meta: ExternalSubtitleMeta | EmbeddedSubtitleMeta) {
+    if (isEmbedded(meta)) {
+      $subtitleIndex = meta.index;
+      // TODO: display subtitle entries
+      invoke('get_embedded_subtitle', {
+        path: player.src!,
+        index: meta.index
+      }).then((subtitle) => console.log(subtitle));
+    }
+
+    menu.hide();
+  }
+
+  // TODO: auto hide menu on open
+  function disableSubtitle() {
+    if (isMenuOpen) {
+      // FIXME: use non-hacky way to disable context menu popover
+      const unsubscribe = isMenuOpen.subscribe((_) => {
+        $subtitleIndex = -1;
+        menu.hide();
+        setTimeout(() => {
+          unsubscribe();
+        }, 1);
+      });
+    }
+  }
 </script>
 
-<!-- TODO: don't hide controls if menu is opened -->
-<ContextMenu id="subtitle-button" pad={!hasSubtitles} let:isOpen>
-  <!-- TODO: turn off subtitles on click -->
+<ContextMenu
+  bind:this={menu}
+  bind:isOpen={isMenuOpen}
+  id="subtitle-button"
+  pad={!hasSubtitles}
+  let:isOpen
+>
   <Tooltipped id="subtitle-button" disabled={isOpen}>
     {#if subtitleOn}
-      <SubtitleOffButton on:click={null} />
+      <SubtitleOffButton on:click={disableSubtitle} />
     {:else}
-      <SubtitleOnButton on:click={null} />
+      <SubtitleOnButton />
     {/if}
     <svelte:fragment slot="tooltip">
       {#if !subtitleOn}
@@ -49,7 +86,9 @@
           <div>
             <div class="context-menu-header">External</div>
             {#each $subtitles.external as subtitle}
-              <SubtitleLabel format={subtitle.ext}>{subtitle.basename}</SubtitleLabel>
+              <SubtitleLabel format={subtitle.ext} on:click={() => chooseSubtitle(subtitle)}
+                >{subtitle.basename}</SubtitleLabel
+              >
             {/each}
           </div>
         {/if}
@@ -57,7 +96,9 @@
           <div>
             <div class="context-menu-header dense">Embedded</div>
             {#each $subtitles.embedded as track, index}
-              <SubtitleLabel>{labelOf(track, index + 1)}</SubtitleLabel>
+              <SubtitleLabel on:click={() => chooseSubtitle(track)}
+                >{labelOf(track, index + 1)}</SubtitleLabel
+              >
             {/each}
           </div>
         {/if}
