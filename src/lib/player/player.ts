@@ -2,19 +2,27 @@ import { toDurationString, type Nullable } from '$lib/util';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { readDir } from '@tauri-apps/api/fs';
 import { dirname, extname, basename } from '@tauri-apps/api/path';
-import { derived, writable, type Unsubscriber, type Writable, get } from 'svelte/store';
+import {
+  derived,
+  writable,
+  type Unsubscriber,
+  type Writable,
+  get,
+  type Readable
+} from 'svelte/store';
 import {
   type ExternalSubtitleMeta,
   type EmbeddedSubtitleMeta,
   type SubtitlesMeta,
-  isSubtitleSupported
+  isSubtitleSupported,
+  type Subtitle
 } from './subtitle';
 import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api';
 import type { AudioTrackList, NamedAudioTrack, NamedAudioTrackList } from './audio';
 import type { Bridge } from '$lib/store/bridge';
-import { subtitleDisplay } from '$lib/store/player';
+import { subtitleDisplay, playbackTime, activeSubtitle } from '$lib/store/player';
 
 type Time = number;
 
@@ -30,10 +38,10 @@ export class Player {
   );
   private unsubscribeDurationString: Nullable<Unsubscriber> = null;
 
-  private time = writable(0);
+  private time: Bridge<number>;
   private unsubscribeTime: Nullable<Unsubscriber> = null;
 
-  public timeString = derived(this.time, (time) => toDurationString(Math.round(time)));
+  public timeString: Readable<string>;
   private unsubscribeTimeString: Nullable<Unsubscriber> = null;
 
   private paused = writable(true);
@@ -51,6 +59,8 @@ export class Player {
   private fullscreen = writable(false);
   private unsubscribeFullscreen: Nullable<Unsubscriber> = null;
 
+  private subtitle: Bridge<Nullable<Subtitle>>;
+
   private subtitles = writable({
     external: [] as ExternalSubtitleMeta[],
     embedded: [] as EmbeddedSubtitleMeta[]
@@ -67,8 +77,34 @@ export class Player {
 
   constructor() {
     this.registerHotkeys();
+
+    // ? Start loops
+    this.startSubtitleDisplayLoop();
+
+    // ? Configure bridges
     this.subtitleDisplay = subtitleDisplay.other;
     this.subtitleDisplay.setRelativeFlow('other');
+
+    this.time = playbackTime;
+    this.time.setRelativeFlow('other');
+
+    // Only receive subtitle update from control
+    this.subtitle = activeSubtitle.other;
+    this.subtitle.setRelativeFlow('self');
+    this.subtitle.subscribe((subtitle) => {
+      if (!subtitle) {
+        this.subtitleDisplay.set('');
+      }
+    });
+
+    this.timeString = derived(this.time, (time) => toDurationString(Math.round(time)));
+  }
+
+  private startSubtitleDisplayLoop() {
+    requestAnimationFrame(() => {
+      this.updateSubtitleDisplay();
+      this.startSubtitleDisplayLoop();
+    });
   }
 
   private registerHotkeys() {
@@ -258,6 +294,10 @@ export class Player {
     return get(this.fullscreen);
   }
 
+  get $subtitle() {
+    return get(this.subtitle);
+  }
+
   get $subtitles() {
     return get(this.subtitles);
   }
@@ -317,15 +357,6 @@ export class Player {
     this.element.defaultPlaybackRate = rate;
   }
 
-  // set volume(volumePercentage: number) {
-  //   if (!this.hasElementBound()) return;
-  //   this.element.volume = volumePercentage / 100;
-  // }
-
-  // get volume(): number {
-  //   return Math.round(this.element.volume * 100);
-  // }
-
   public mute() {
     if (!this.hasElementBound()) return;
     this.muted.set(true);
@@ -344,6 +375,29 @@ export class Player {
 
   public unfreezeTimeUpdate() {
     this.timeUpdateFrozen = false;
+  }
+
+  public updateSubtitleDisplay() {
+    if (!this.$subtitle) return;
+
+    const time = this.$time;
+    let line: Nullable<string> = null;
+    for (const entry of this.$subtitle.lines) {
+      if (entry.pts + entry.duration < time) {
+        continue;
+      }
+
+      if (time < entry.pts) {
+        line = '';
+        console.log('Updating subtitle with empty');
+        break;
+      }
+
+      line = entry.text;
+      break;
+    }
+
+    if (line) this.subtitleDisplay.set(line);
   }
 
   public chooseAudioTrack(id: string) {

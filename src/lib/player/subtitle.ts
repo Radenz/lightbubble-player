@@ -18,6 +18,18 @@ export interface SubtitlesMeta {
   embedded: EmbeddedSubtitleMeta[];
 }
 
+export interface SubtitleEntry {
+  pts: number;
+  duration: number;
+  text: string;
+}
+
+export interface Subtitle {
+  // TODO: parse header
+  header: string;
+  lines: SubtitleEntry[];
+}
+
 export function isSubtitleSupported(format: string): format is SubtitleFormat {
   return SUPPORTED_SUBTITLE_FORMATS.includes(format as SubtitleFormat);
 }

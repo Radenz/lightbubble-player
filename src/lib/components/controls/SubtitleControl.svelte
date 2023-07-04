@@ -8,13 +8,15 @@
     labelOf,
     type EmbeddedSubtitleMeta,
     type ExternalSubtitleMeta,
-    isEmbedded
+    isEmbedded,
+    type Subtitle
   } from '$lib/player/subtitle';
   import SubtitleOffButton from '../buttons/SubtitleOffButton.svelte';
   import SubtitleOnButton from '../buttons/SubtitleOnButton.svelte';
   import SubtitleLabel from '../labels/SubtitleLabel.svelte';
   import { invoke } from '@tauri-apps/api/tauri';
   import type { Nullable } from '$lib/util';
+  import { activeSubtitle } from '$lib/store/player';
 
   let menu: ContextMenu;
   let isMenuOpen: Nullable<Writable<boolean>> = null;
@@ -25,19 +27,16 @@
     embedded: [] as EmbeddedSubtitleMeta[]
   });
   player.bindSubtitles(subtitles);
-  // TODO: adjust based on subtitle metadata
-  const subtitleIndex = writable(-1);
+
   $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
-  $: subtitleOn = $subtitleIndex >= 0;
+  $: subtitleOn = !!$activeSubtitle;
 
   function chooseSubtitle(meta: ExternalSubtitleMeta | EmbeddedSubtitleMeta) {
     if (isEmbedded(meta)) {
-      $subtitleIndex = meta.index;
-      // TODO: display subtitle entries
-      invoke('get_embedded_subtitle', {
+      invoke<Subtitle>('get_embedded_subtitle', {
         path: player.src!,
         index: meta.index
-      }).then((subtitle) => console.log(subtitle));
+      }).then((subtitle) => ($activeSubtitle = subtitle));
     }
 
     menu.hide();
@@ -48,7 +47,7 @@
     if (isMenuOpen) {
       // FIXME: use non-hacky way to disable context menu popover
       const unsubscribe = isMenuOpen.subscribe((_) => {
-        $subtitleIndex = -1;
+        $activeSubtitle = null;
         menu.hide();
         setTimeout(() => {
           unsubscribe();
@@ -56,6 +55,8 @@
       });
     }
   }
+
+  $: console.log($activeSubtitle);
 </script>
 
 <ContextMenu

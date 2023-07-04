@@ -1,3 +1,5 @@
+import type { Subtitle } from '$lib/player/subtitle';
+import type { Nullable } from '$lib/util';
 import { bridge } from './bridge';
 
 // TODO: refactor current stores
@@ -9,4 +11,5 @@ export const paused = bridge(false);
 export const ended = bridge(false);
 export const fullscreen = bridge(false);
 
+export const activeSubtitle = bridge(null as Nullable<Subtitle>);
 export const subtitleDisplay = bridge('');
