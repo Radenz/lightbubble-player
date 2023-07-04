@@ -12,7 +12,7 @@ pub struct SubtitleEntry {
 
 #[derive(Debug, Serialize)]
 pub struct ParsedSubtitle {
-    // TODO: parse header
+    // ? Header is parsed in the frontend
     pub header: String,
     pub lines: Vec<SubtitleEntry>,
 }
@@ -55,14 +55,10 @@ pub fn get_embedded_subtitle(path: String, index: usize) -> Option<ParsedSubtitl
                 }
             }
 
-            dbg!(time_base);
-
             let text = texts.join("\n");
 
             let pts = timestamp_to_seconds(pts, time_base);
             let duration = timestamp_to_seconds(duration, time_base);
-            dbg!(pts);
-            dbg!(duration);
 
             lines.push(SubtitleEntry {
                 pts,

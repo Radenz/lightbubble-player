@@ -9,7 +9,8 @@
     type EmbeddedSubtitleMeta,
     type ExternalSubtitleMeta,
     isEmbedded,
-    type Subtitle
+    type RawSubtitle,
+    parseSubtitle
   } from '$lib/player/subtitle';
   import SubtitleOffButton from '../buttons/SubtitleOffButton.svelte';
   import SubtitleOnButton from '../buttons/SubtitleOnButton.svelte';
@@ -33,10 +34,10 @@
 
   function chooseSubtitle(meta: ExternalSubtitleMeta | EmbeddedSubtitleMeta) {
     if (isEmbedded(meta)) {
-      invoke<Subtitle>('get_embedded_subtitle', {
+      invoke<RawSubtitle>('get_embedded_subtitle', {
         path: player.src!,
         index: meta.index
-      }).then((subtitle) => ($activeSubtitle = subtitle));
+      }).then((rawSubtitle) => ($activeSubtitle = parseSubtitle(rawSubtitle)));
     }
 
     menu.hide();

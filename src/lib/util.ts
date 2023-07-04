@@ -35,6 +35,10 @@ export function toDurationString(duration: number): string {
   return durationString;
 }
 
+export function isNumberExact(text: string): boolean {
+  return `${parseFloat(text)}` === text;
+}
+
 /**
  * Alias for built-in template literal. Used to scope
  * tailwind intellisense in ts strings.
