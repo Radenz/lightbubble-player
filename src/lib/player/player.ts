@@ -20,7 +20,14 @@ import {
 import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api';
-import type { AudioTrackList, NamedAudioTrack, NamedAudioTrackList } from './audio';
+import type {
+  AudioTrackList,
+  NamedAudioTrack,
+  NamedAudioTrackList,
+  NamedVideoTrack,
+  NamedVideoTrackList,
+  VideoTrackList
+} from './av';
 import type { Bridge } from '$lib/store/bridge';
 import { subtitleDisplay, playbackTime, activeSubtitle } from '$lib/store/player';
 
@@ -312,6 +319,24 @@ export class Player {
     return tracks as NamedAudioTrackList;
   }
 
+  get videoTracks(): Nullable<NamedVideoTrackList> {
+    if (!this.element) return null;
+    const tracks: VideoTrackList = this.element['videoTracks'];
+    let index = 1;
+    for (const track of tracks) {
+      track.name = track.language === 'und' ? `Track ${index++}` : track.label;
+    }
+    return tracks as NamedVideoTrackList;
+  }
+
+  get selectedVideoTracks(): Nullable<NamedVideoTrack> {
+    if (!this.videoTracks) return null;
+    for (const track of this.videoTracks) {
+      if (track.selected) return track;
+    }
+    return null;
+  }
+
   get selectedAudioTracks(): Nullable<NamedAudioTrack> {
     if (!this.audioTracks) return null;
     for (const track of this.audioTracks) {
@@ -398,6 +423,18 @@ export class Player {
     }
 
     if (line) this.subtitleDisplay.set(line);
+  }
+
+  public chooseVideoTrack(id: string) {
+    if (this.videoTracks) {
+      const selectedTrack = this.videoTracks.getTrackById(id);
+      if (selectedTrack) {
+        selectedTrack.selected = true;
+        // TODO: test if the video continues properly (not paused),
+        // otherwise uncomment this line
+        // this.seek(this.$time);
+      }
+    }
   }
 
   public chooseAudioTrack(id: string) {

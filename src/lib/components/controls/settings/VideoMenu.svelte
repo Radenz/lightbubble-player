@@ -1,31 +1,31 @@
 <script lang="ts">
-  import type { NamedAudioTrack } from '$lib/player/av';
+  import type { NamedVideoTrack } from '$lib/player/av';
   import type { Player } from '$lib/player/player';
   import { createEventDispatcher, getContext } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
   const player = getContext('player') as Player;
-  const audioTracks = player.audioTracks;
+  const videoTracks = player.videoTracks;
 
-  function choose(track: NamedAudioTrack) {
-    player.chooseAudioTrack(track.id);
+  function choose(track: NamedVideoTrack) {
+    player.chooseVideoTrack(track.id);
     dispatch('choose', track.name);
   }
 </script>
 
 <div class="flex items-stretch flex-col gap-1">
-  <div class="context-menu-header">Audio Track</div>
-  {#if audioTracks}
-    {#each audioTracks as audioTrack, index (index)}
+  <div class="context-menu-header">Video Track</div>
+  {#if videoTracks}
+    {#each videoTracks as videoTrack, index (index)}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
         on:click={() => {
-          choose(audioTrack);
+          choose(videoTrack);
         }}
         class="setting-option"
       >
-        <span>{audioTrack.name}</span>
+        <span>{videoTrack.name}</span>
       </div>
     {/each}
   {:else}

@@ -17,6 +17,7 @@
   import AudioMenu from './settings/AudioMenu.svelte';
   import SpeedMenu from './settings/SpeedMenu.svelte';
   import type { Player } from '$lib/player/player';
+  import VideoMenu from './settings/VideoMenu.svelte';
 
   const items: SettingsItem[] = [
     {
@@ -30,7 +31,8 @@
     },
     {
       label: 'Video Track',
-      value: 'None'
+      value: 'None',
+      component: VideoMenu
     },
     {
       label: 'Audio Track',
@@ -42,6 +44,7 @@
   let menu: ContextMenu;
   const player = getContext('player') as Player;
   player.onLoaded(() => {
+    items[2].value = player.selectedVideoTracks!.name;
     items[3].value = player.selectedAudioTracks!.name;
   });
 
