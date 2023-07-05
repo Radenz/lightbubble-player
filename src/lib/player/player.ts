@@ -465,6 +465,8 @@ export class Player {
     if (this.audioTracks) {
       const selectedTrack = this.audioTracks.getTrackById(id);
 
+      if (selectedTrack?.enabled) return;
+
       if (selectedTrack) {
         for (const track of this.audioTracks) {
           track.enabled = track === selectedTrack;
