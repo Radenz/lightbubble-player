@@ -18,11 +18,16 @@
   import SubtitleLabel from '../labels/SubtitleLabel.svelte';
   import { invoke } from '@tauri-apps/api/tauri';
   import type { Nullable } from '$lib/util';
-  import { activeSubtitle } from '$lib/store/player';
+  import { activeSubtitle, activeSubtitleMeta } from '$lib/store/player';
 
   let menu: ContextMenu;
   let isMenuOpen: Nullable<Writable<boolean>> = null;
-  const chosenSubtitle = writable(null as Nullable<SubtitleMeta>);
+  const chosenSubtitle = activeSubtitleMeta.other;
+  chosenSubtitle.setRelativeFlow('self');
+  chosenSubtitle.subscribe((subtitleMeta) => {
+    if (chosenSubtitle.relativeFlow !== 'self') return;
+    subtitleMeta ? chooseSubtitle(subtitleMeta) : disableSubtitle();
+  });
 
   const player = getContext('player') as Player;
   const subtitles = writable({
@@ -47,7 +52,10 @@
 
     invoke<RawSubtitle>(fn, params).then((rawSubtitle) => {
       $activeSubtitle = parseSubtitle(rawSubtitle);
+      chosenSubtitle.setRelativeFlow('other');
       $chosenSubtitle = meta;
+      chosenSubtitle.setRelativeFlow('self');
+
       player.updateSubtitleDisplay();
     });
 

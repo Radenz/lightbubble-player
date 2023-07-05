@@ -15,7 +15,8 @@ import {
   type EmbeddedSubtitleMeta,
   type SubtitlesMeta,
   isSubtitleSupported,
-  type Subtitle
+  type Subtitle,
+  type SubtitleMeta
 } from './subtitle';
 import * as HotkeyRegistry from '$lib/keyboard/hotkey';
 import { appWindow } from '@tauri-apps/api/window';
@@ -29,7 +30,12 @@ import type {
   VideoTrackList
 } from './av';
 import type { Bridge } from '$lib/store/bridge';
-import { subtitleDisplay, playbackTime, activeSubtitle } from '$lib/store/player';
+import {
+  subtitleDisplay,
+  playbackTime,
+  activeSubtitle,
+  activeSubtitleMeta
+} from '$lib/store/player';
 
 type Time = number;
 
@@ -67,6 +73,7 @@ export class Player {
   private unsubscribeFullscreen: Nullable<Unsubscriber> = null;
 
   private subtitle: Bridge<Nullable<Subtitle>>;
+  private lastChosenSubtitleMeta: Nullable<SubtitleMeta>;
 
   private subtitles = writable({
     external: [] as ExternalSubtitleMeta[],
@@ -95,8 +102,14 @@ export class Player {
     this.time = playbackTime;
     this.time.setRelativeFlow('other');
 
-    // Only receive subtitle update from control
     this.subtitle = activeSubtitle.other;
+    this.lastChosenSubtitleMeta = null;
+    activeSubtitleMeta.subscribe((meta) => {
+      if (meta) {
+        this.lastChosenSubtitleMeta = meta;
+      }
+    });
+
     this.subtitle.setRelativeFlow('self');
     this.subtitle.subscribe((subtitle) => {
       if (!subtitle) {
@@ -120,6 +133,9 @@ export class Player {
     });
     HotkeyRegistry.register('F', () => {
       this.$fullscreen ? this.exitFullscreen() : this.setFullscreen();
+    });
+    HotkeyRegistry.register('C', () => {
+      this.toggleSubtitle();
     });
     HotkeyRegistry.register('Space', () => {
       this.$paused || this.$ended ? this.play() : this.pause();
@@ -394,6 +410,15 @@ export class Player {
     this.element.muted = false;
   }
 
+  public toggleSubtitle() {
+    if (this.$subtitle) {
+      activeSubtitleMeta.set(null);
+      return;
+    }
+
+    activeSubtitleMeta.set(this.lastChosenSubtitleMeta);
+  }
+
   public freezeTimeUpdate() {
     this.timeUpdateFrozen = true;
   }
@@ -414,7 +439,6 @@ export class Player {
 
       if (time < entry.pts) {
         line = '';
-        console.log('Updating subtitle with empty');
         break;
       }
 
@@ -474,9 +498,19 @@ export class Player {
     this.duration.set(this.element.duration);
   }
 
-  private discoverSubtitles() {
-    this.discoverEmbeddedSubtitles();
-    this.discoverExternalSubtitles();
+  private async discoverSubtitles() {
+    await this.discoverEmbeddedSubtitles();
+    await this.discoverExternalSubtitles();
+    const subtitles = this.$subtitles;
+
+    if (subtitles.embedded.length > 0) {
+      this.lastChosenSubtitleMeta = subtitles.embedded[0];
+      return;
+    }
+
+    if (subtitles.external.length > 0) {
+      this.lastChosenSubtitleMeta = subtitles.external[0];
+    }
   }
 
   private async discoverEmbeddedSubtitles() {
@@ -484,8 +518,6 @@ export class Player {
       const streams = await invoke<Streams>('discover_streams', {
         path: this.source
       });
-
-      console.log(`found streams`, streams);
 
       this.subtitles.update((subtitles) => {
         subtitles.embedded = streams.subtitle;

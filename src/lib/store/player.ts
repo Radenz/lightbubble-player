@@ -1,4 +1,4 @@
-import type { Subtitle } from '$lib/player/subtitle';
+import type { Subtitle, SubtitleMeta } from '$lib/player/subtitle';
 import type { Nullable } from '$lib/util';
 import { bridge } from './bridge';
 
@@ -12,4 +12,5 @@ export const ended = bridge(false);
 export const fullscreen = bridge(false);
 
 export const activeSubtitle = bridge(null as Nullable<Subtitle>);
+export const activeSubtitleMeta = bridge(null as Nullable<SubtitleMeta>);
 export const subtitleDisplay = bridge('');

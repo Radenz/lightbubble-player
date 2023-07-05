@@ -71,6 +71,13 @@ export class Bridge<T> implements Writable<T> {
     this.setFlow(actualFlow);
   }
 
+  get relativeFlow(): BridgeRelativeFlow {
+    if (this.flow === 'both') return 'both';
+    if (this.flow === 'none') return 'none';
+    if (this.flow === this.kind) return 'self';
+    return 'other';
+  }
+
   private onChanged(value: T) {
     if (this.flow === 'both' || this.flow === this.other.kind) {
       this.other.store.set(value);
