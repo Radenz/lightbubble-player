@@ -3,7 +3,7 @@
   import { open } from '@tauri-apps/api/dialog';
   import { appWindow } from '@tauri-apps/api/window';
 
-  import { onMount, setContext, tick } from 'svelte';
+  import { getContext, onMount, setContext, tick } from 'svelte';
   import { Slider } from 'fluent-svelte';
   import { fade } from 'svelte/transition';
 
@@ -133,6 +133,9 @@
   }
   setContext('showControls', showControls);
 
+  const showCursor = getContext('showCursor') as () => void;
+  const hideCursor = getContext('hideCursor') as () => void;
+
   onMount(async () => {
     invoke('get_args').then(console.log);
 
@@ -196,6 +199,11 @@
   }
 
   $: $paused || $cursorInsideControls || $openContextMenu ? freezeControls() : unfreezeControls();
+  $: if (controlsHidden) {
+    hideCursor();
+  } else {
+    showCursor();
+  }
 </script>
 
 <!-- TODO: consider radix-svelte & shadcn-svelte for more robust components (possible BREAKING CHANGES) -->

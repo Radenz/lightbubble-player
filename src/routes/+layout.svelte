@@ -1,8 +1,21 @@
 <script lang="ts">
+  import { setContext } from 'svelte';
   import '../app.postcss';
-  import { onMount } from 'svelte';
   import './styles.css';
   import 'fluent-svelte/theme.css';
+
+  let cursorHidden = false;
+
+  function hideCursor() {
+    cursorHidden = true;
+  }
+
+  function showCursor() {
+    cursorHidden = false;
+  }
+
+  setContext('hideCursor', hideCursor);
+  setContext('showCursor', showCursor);
 </script>
 
 <svelte:head>
@@ -12,7 +25,7 @@
   />
 </svelte:head>
 
-<div class="app">
+<div class="app" class:cursor-hidden={cursorHidden}>
   <slot />
 </div>
 
@@ -21,6 +34,14 @@
     font-family: 'Inter', sans-serif;
     height: 100vh;
     overflow: hidden;
+
+    &.cursor-hidden {
+      cursor: none !important;
+
+      & * {
+        cursor: none !important;
+      }
+    }
   }
 
   :global(.material-symbols-rounded) {
