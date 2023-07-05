@@ -10,7 +10,8 @@
     type ExternalSubtitleMeta,
     isEmbedded,
     type RawSubtitle,
-    parseSubtitle
+    parseSubtitle,
+    type SubtitleMeta
   } from '$lib/player/subtitle';
   import SubtitleOffButton from '../buttons/SubtitleOffButton.svelte';
   import SubtitleOnButton from '../buttons/SubtitleOnButton.svelte';
@@ -21,6 +22,7 @@
 
   let menu: ContextMenu;
   let isMenuOpen: Nullable<Writable<boolean>> = null;
+  const chosenSubtitle = writable(null as Nullable<SubtitleMeta>);
 
   const player = getContext('player') as Player;
   const subtitles = writable({
@@ -37,18 +39,21 @@
       invoke<RawSubtitle>('get_embedded_subtitle', {
         path: player.src!,
         index: meta.index
-      }).then((rawSubtitle) => ($activeSubtitle = parseSubtitle(rawSubtitle)));
+      }).then((rawSubtitle) => {
+        $activeSubtitle = parseSubtitle(rawSubtitle);
+        $chosenSubtitle = meta;
+      });
     }
 
     menu.hide();
   }
 
-  // TODO: auto hide menu on open
   function disableSubtitle() {
     if (isMenuOpen) {
       // FIXME: use non-hacky way to disable context menu popover
       const unsubscribe = isMenuOpen.subscribe((_) => {
         $activeSubtitle = null;
+        $chosenSubtitle = null;
         menu.hide();
         setTimeout(() => {
           unsubscribe();
@@ -56,8 +61,6 @@
       });
     }
   }
-
-  $: console.log($activeSubtitle);
 </script>
 
 <ContextMenu
@@ -69,38 +72,40 @@
 >
   <Tooltipped id="subtitle-button" disabled={isOpen}>
     {#if subtitleOn}
-      <SubtitleOffButton on:click={disableSubtitle} />
+      <SubtitleOffButton />
     {:else}
       <SubtitleOnButton />
     {/if}
-    <svelte:fragment slot="tooltip">
-      {#if !subtitleOn}
-        Subtitle (C)
-      {:else}
-        Turn Off Subtitle (C)
-      {/if}
-    </svelte:fragment>
+    <svelte:fragment slot="tooltip">Subtitle (C)</svelte:fragment>
   </Tooltipped>
   <svelte:fragment slot="menu">
     <div>
       {#if hasSubtitles}
         {#if $subtitles.external.length > 0}
+          <SubtitleLabel enabled={!subtitleOn} on:click={disableSubtitle}>Off</SubtitleLabel>
           <div>
             <div class="context-menu-header">External</div>
             {#each $subtitles.external as subtitle}
-              <SubtitleLabel format={subtitle.ext} on:click={() => chooseSubtitle(subtitle)}
-                >{subtitle.basename}</SubtitleLabel
+              <SubtitleLabel
+                enabled={subtitle === $chosenSubtitle}
+                format={subtitle.ext}
+                on:click={() => chooseSubtitle(subtitle)}
               >
+                {subtitle.basename}
+              </SubtitleLabel>
             {/each}
           </div>
         {/if}
         {#if $subtitles.embedded.length > 0}
           <div>
             <div class="context-menu-header dense">Embedded</div>
-            {#each $subtitles.embedded as track, index}
-              <SubtitleLabel on:click={() => chooseSubtitle(track)}
-                >{labelOf(track, index + 1)}</SubtitleLabel
+            {#each $subtitles.embedded as meta, index}
+              <SubtitleLabel
+                enabled={meta === $chosenSubtitle}
+                on:click={() => chooseSubtitle(meta)}
               >
+                {labelOf(meta, index + 1)}
+              </SubtitleLabel>
             {/each}
           </div>
         {/if}
