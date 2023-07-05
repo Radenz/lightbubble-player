@@ -34,16 +34,22 @@
   $: hasSubtitles = $subtitles.external.length > 0 || $subtitles.embedded.length > 0;
   $: subtitleOn = !!$activeSubtitle;
 
-  function chooseSubtitle(meta: ExternalSubtitleMeta | EmbeddedSubtitleMeta) {
-    if (isEmbedded(meta)) {
-      invoke<RawSubtitle>('get_embedded_subtitle', {
-        path: player.src!,
-        index: meta.index
-      }).then((rawSubtitle) => {
-        $activeSubtitle = parseSubtitle(rawSubtitle);
-        $chosenSubtitle = meta;
-      });
-    }
+  function chooseSubtitle(meta: SubtitleMeta) {
+    const fn = isEmbedded(meta) ? 'get_embedded_subtitle' : 'get_external_subtitle';
+    const params = isEmbedded(meta)
+      ? {
+          path: player.src!,
+          index: meta.index
+        }
+      : {
+          path: meta.path
+        };
+
+    invoke<RawSubtitle>(fn, params).then((rawSubtitle) => {
+      $activeSubtitle = parseSubtitle(rawSubtitle);
+      $chosenSubtitle = meta;
+      player.updateSubtitleDisplay();
+    });
 
     menu.hide();
   }

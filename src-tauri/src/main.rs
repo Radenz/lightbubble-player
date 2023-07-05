@@ -2,7 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use args::get_args;
-use av::{discover_streams, subtitle::get_embedded_subtitle};
+use av::{
+    discover_streams,
+    subtitle::{get_embedded_subtitle, get_external_subtitle},
+};
 use prelude::*;
 use std::env;
 use tauri::generate_handler;
@@ -17,7 +20,8 @@ fn main() {
         .invoke_handler(generate_handler![
             get_args,
             discover_streams,
-            get_embedded_subtitle
+            get_embedded_subtitle,
+            get_external_subtitle
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

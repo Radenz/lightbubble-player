@@ -71,6 +71,11 @@ pub fn get_embedded_subtitle(path: String, index: usize) -> Option<ParsedSubtitl
     Some(ParsedSubtitle { header, lines })
 }
 
+#[tauri::command]
+pub fn get_external_subtitle(path: String) -> Option<ParsedSubtitle> {
+    return get_embedded_subtitle(path, 0);
+}
+
 pub fn get_subtitle_header(decoder: &decoder::Subtitle) -> String {
     unsafe {
         let header_ptr = (*decoder.as_ptr()).subtitle_header;
