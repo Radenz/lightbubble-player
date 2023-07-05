@@ -25,7 +25,7 @@
         }}
         class="setting-option"
       >
-        <span>{audioTrack.label}</span>
+        <span>{audioTrack.name}</span>
       </div>
     {/each}
   {:else}
