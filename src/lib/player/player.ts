@@ -330,7 +330,7 @@ export class Player {
     const tracks: AudioTrackList = this.element['audioTracks'];
     let index = 1;
     for (const track of tracks) {
-      track.name = track.language === 'und' ? `Track ${index++}` : track.label;
+      track.name = !track.language || track.language === 'und' ? `Track ${index++}` : track.label;
     }
     return tracks as NamedAudioTrackList;
   }
@@ -340,7 +340,7 @@ export class Player {
     const tracks: VideoTrackList = this.element['videoTracks'];
     let index = 1;
     for (const track of tracks) {
-      track.name = track.language === 'und' ? `Track ${index++}` : track.label;
+      track.name = !track.language || track.language === 'und' ? `Track ${index++}` : track.label;
     }
     return tracks as NamedVideoTrackList;
   }
